@@ -1,0 +1,414 @@
+{
+  "locations": [
+    {
+      "id": "warehouse-a",
+      "name": "Warehouse A",
+      "description": "Main storage facility - Zone 1",
+      "status": "normal",
+      "icon": "🏭",
+      "totalDevices": 8,
+      "activeDevices": 6,
+      "inactiveDevices": 2,
+      "temperature":23,
+      "aqi":30,
+      "humidity":50
+    },
+    {
+      "id": "reception",
+      "name": "Reception",
+      "description": "Front office and lobby area",
+      "status": "warning",
+      "icon": "🏢",
+      "totalDevices": 6,
+      "activeDevices": 5,
+      "inactiveDevices": 1,
+      "temperature":32,
+      "aqi":32,
+      "humidity":60
+    },
+    {
+      "id": "cold-storage",
+      "name": "Cold Storage",
+      "description": "Temperature controlled storage unit",
+      "status": "alert",
+      "icon": "❄️",
+      "totalDevices": 10,
+      "activeDevices": 7,
+      "inactiveDevices": 3,
+      "temperature":-2,
+      "aqi":20,
+      "humidity":30
+    },
+    {
+      "id": "server-room",
+      "name": "Server Room",
+      "description": "IT Infrastructure housing",
+      "status": "normal",
+      "icon": "🖥️",
+      "totalDevices": 12,
+      "activeDevices": 11,
+      "inactiveDevices": 1,
+      "temperature":20,
+      "aqi":25,
+      "humidity":45
+    }
+  ],
+
+  "locationOverview": [
+    {
+      "id": 1,
+      "locationId": "warehouse-a",
+      "temperature": {
+        "value": "20°C",
+        "label": "Temperature"
+      },
+      "humidity": {
+        "value": "52%",
+        "label": "Humidity"
+      },
+      "aqi": {
+        "value": "Good",
+        "label": "AQI"
+      },
+      "totalDevices": 8,
+      "activeDevices": 6,
+      "inactiveDevices": 2
+    },
+    {
+      "id": 2,
+      "locationId": "reception",
+      "temperature": {
+        "value": "27°C",
+        "label": "Temperature"
+      },
+      "humidity": {
+        "value": "65%",
+        "label": "Humidity"
+      },
+      "aqi": {
+        "value": "Moderate",
+        "label": "AQI"
+      },
+      "totalDevices": 6,
+      "activeDevices": 5,
+      "inactiveDevices": 1
+    },
+    {
+      "id": 3,
+      "locationId": "cold-storage",
+      "temperature": {
+        "value": "-2°C",
+        "label": "Temperature"
+      },
+      "humidity": {
+        "value": "30%",
+        "label": "Humidity"
+      },
+      "aqi": {
+        "value": "Good",
+        "label": "AQI"
+      },
+      "totalDevices": 10,
+      "activeDevices": 7,
+      "inactiveDevices": 3
+    },
+    {
+      "id": 4,
+      "locationId": "server-room",
+      "temperature": {
+        "value": "20°C",
+        "label": "Temperature"
+      },
+      "humidity": {
+        "value": "45%",
+        "label": "Humidity"
+      },
+      "aqi": {
+        "value": "Good",
+        "label": "AQI"
+      },
+      "totalDevices": 12,
+      "activeDevices": 11,
+      "inactiveDevices": 1
+    }
+  ],
+
+  "smallStats": [
+    {
+      "id": 1,
+      "locationId": "warehouse-a",
+      "title": "Lux",
+      "value": "500",
+      "unit": "LX",
+      "icon": "Sun",
+      "iconBg": "#FFF2E4",
+      "iconColor": "#FF8A00"
+    },
+    {
+      "id": 2,
+      "locationId": "warehouse-a",
+      "title": "TDS",
+      "value": "500",
+      "unit": "MG/L",
+      "icon": "Grain",
+      "iconBg": "#EFE8FF",
+      "iconColor": "#7A5AF8"
+    },
+    {
+      "id": 3,
+      "locationId": "reception",
+      "title": "Noise",
+      "value": "88",
+      "unit": "dBA",
+      "icon": "AudioLines",
+      "iconBg": "#EFEFEF",
+      "iconColor": "#5B5B66"
+    },
+    {
+      "id": 4,
+      "locationId": "cold-storage",
+      "title": "COD",
+      "value": "50",
+      "unit": "MG/L",
+      "icon": "WaterDrop",
+      "iconBg": "#E8F3D8",
+      "iconColor": "#6B8E23"
+    },
+    {
+      "id": 5,
+      "locationId": "server-room",
+      "title": "PH",
+      "value": "7.1",
+      "unit": "",
+      "icon": "Science",
+      "iconBg": "#FCE7F3",
+      "iconColor": "#DB2777"
+    }
+  ],
+
+  "airQualityData": [
+    {
+      "id": 1,
+      "locationId": "warehouse-a",
+      "label": "PM2.5",
+      "value": "30",
+      "unit": "μg/m³"
+    },
+    {
+      "id": 2,
+      "locationId": "warehouse-a",
+      "label": "CO2",
+      "value": "450",
+      "unit": "ppm"
+    },
+    {
+      "id": 3,
+      "locationId": "reception",
+      "label": "CO2",
+      "value": "850",
+      "unit": "ppm"
+    },
+    {
+      "id": 4,
+      "locationId": "cold-storage",
+      "label": "PM10",
+      "value": "22",
+      "unit": "μg/m³"
+    },
+    {
+      "id": 5,
+      "locationId": "server-room",
+      "label": "TVOC",
+      "value": "95",
+      "unit": "μg"
+    }
+  ],
+
+  "devices": [
+    {
+      "id": 1,
+      "locationId": "warehouse-a",
+      "deviceCode": "DEV-001",
+      "deviceName": "TempSense Pro 300",
+      "type": "Temperature",
+      "sensors": ["Temperature", "Humidity", "AQI"],
+      "min": "15 °C",
+      "max": "26 °C",
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "locationId": "warehouse-a",
+      "deviceCode": "DEV-002",
+      "deviceName": "AirWatch X200",
+      "type": "AQI",
+      "sensors": ["CO2", "PM25", "VOC"],
+      "min": "0 ppm",
+      "max": "800 ppm",
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "locationId": "reception",
+      "deviceCode": "DEV-005",
+      "deviceName": "AirWatch X100",
+      "type": "AQI",
+      "sensors": ["CO2", "VOC", "PM25"],
+      "min": "0 ppm",
+      "max": "600 ppm",
+      "status": "Active"
+    },
+    {
+      "id": 4,
+      "locationId": "cold-storage",
+      "deviceCode": "DEV-007",
+      "deviceName": "CryoSense Pro",
+      "type": "Temperature",
+      "sensors": ["Temperature", "Humidity", "Pressure"],
+      "min": "-25 °C",
+      "max": "-10 °C",
+      "status": "Active"
+    },
+    {
+      "id": 5,
+      "locationId": "server-room",
+      "deviceCode": "DEV-009",
+      "deviceName": "TempSense Rack",
+      "type": "Temperature",
+      "sensors": ["Temperature", "Humidity", "Heat Index"],
+      "min": "16 °C",
+      "max": "24 °C",
+      "status": "Active"
+    }
+  ],
+
+  "alerts": [
+    {
+      "id": 1,
+      "locationId": "reception",
+      "title": "CO2 level exceeded",
+      "severity": "warning",
+      "sensor": "CO2",
+      "value": "850 ppm",
+      "threshold": "800 ppm",
+      "status": "active",
+      "createdAt": "2026-03-05T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "locationId": "cold-storage",
+      "title": "Temperature dropped below threshold",
+      "severity": "alert",
+      "sensor": "Temperature",
+      "value": "-2°C",
+      "threshold": "0°C",
+      "status": "active",
+      "createdAt": "2026-03-05T09:30:00Z"
+    }
+  ],
+
+  "sensors": [
+    {
+      "id": 1,
+      "deviceName": "TempSense Pro 300",
+      "activeStatus": true,
+      "locationName": "Warehouse A",
+      "sensorType": "Environmental",
+      "sensors": [
+        "Temperature",
+        "Humidity",
+        "CO2"
+      ]
+    },
+    {
+      "id": 2,
+      "deviceName": "AirWatch X200",
+      "activeStatus": true,
+      "locationName": "Warehouse A",
+      "sensorType": "Air Quality",
+      "sensors": [
+        "CO2",
+        "TVOC",
+        "PM10"
+      ]
+    },
+    {
+      "id": 3,
+      "deviceName": "AirWatch X100",
+      "activeStatus": true,
+      "locationName": "Reception",
+      "sensorType": "Air Quality",
+      "sensors": [
+        "CO2",
+        "NO2",
+        "O3"
+      ]
+    },
+    {
+      "id": 4,
+      "deviceName": "CryoSense Pro",
+      "activeStatus": true,
+      "locationName": "Cold Storage",
+      "sensorType": "Industrial",
+      "sensors": [
+        "Temperature",
+        "Humidity",
+        "NH3"
+      ]
+    },
+    {
+      "id": 5,
+      "deviceName": "TempSense Rack",
+      "activeStatus": true,
+      "locationName": "Server Room",
+      "sensorType": "Environmental",
+      "sensors": [
+        "Temperature",
+        "Humidity",
+        "O2"
+      ]
+    }
+  ],
+
+  "sensorType" :[
+    {"id":1,
+      "name":"Lux"},
+    {"id":2,
+      "name":"Temperature"},
+    {"id":3,
+      "name":"Humidity"},
+    {"id":4,
+      "name":"TDS"},
+    {"id":5,
+      "name":"PH"},
+    {"id":6,
+      "name":"COD"},
+    {"id":7,
+      "name":"Noise"},
+    {"id":8,
+      "name":"PM10"},
+    {"id":9,
+      "name":"TSP"},
+    {"id":10,
+      "name":"CO"},
+    {"id":11,
+      "name":"NO2"},
+    {"id":12,
+      "name":"O3"},
+    {"id":13,
+      "name":"O2"},
+    {"id":14,
+      "name":"CH4"},
+    {"id":15,
+      "name":"H2"},
+    {"id":16,
+      "name":"H2S"},
+    {"id":17,
+      "name":"NH3"},
+    {"id":18,
+      "name":"TVOC"},
+    {"id":19,
+      "name":"CO2"}
+]
+
+}
