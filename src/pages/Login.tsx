@@ -4,7 +4,9 @@ import {
     Button,
     Stack,
     TextField,
-    Typography
+    Typography,
+    Backdrop,
+    CircularProgress
 } from "@mui/material";
 
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
@@ -13,13 +15,6 @@ import { useLoginMutation } from "../services/Api/login.api";
 import { useNavigate } from "react-router-dom";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
-interface Ex {
-    data: {
-        detail: string;
-    };
-}
-interface SerializedError extends Ex { };
-
 const LoginPage = () => {
 
     const navigate = useNavigate()
@@ -27,14 +22,6 @@ const LoginPage = () => {
 
 
     const [login, { data, error, isLoading }] = useLoginMutation();
-
-    console.log(error, isLoading, "🔃🔃🔃")
-
-
-    console.log(error, "mfmd🙌🙌🙌🙌")
-
-
-
     const [formData, setFormData] = useState({
         username: "",
         password: ""
@@ -82,7 +69,12 @@ const LoginPage = () => {
 
             }}
         >
-
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={isLoading}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
             <Box>
                 <Box sx={{
                     display: "flex",
@@ -227,7 +219,7 @@ const LoginPage = () => {
                                 />
                             </Box>
 
-                            {(error as SerializedError)?.data?.detail && (
+                            {error && (
                                 <Box
                                     sx={{
                                         display: "flex",
@@ -244,7 +236,7 @@ const LoginPage = () => {
                                             fontWeight: 500,
                                         }}
                                     >
-                                        {(error as SerializedError)?.data?.detail || "Incorrect username or password."}
+                                        {(error as any)?.data?.detail || (error as any)?.error || "Server issue or incorrect credentials. Please try again later."}
                                     </Typography>
                                 </Box>
                             )}
