@@ -15,6 +15,7 @@ import {
     TableRow,
     TextField,
     Typography,
+    CircularProgress,
 } from "@mui/material";
 
 import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
@@ -25,6 +26,7 @@ import UserFormModal from "./UserForm";
 import CommonPagination from "../../components/Pagination";
 import { useCreateUserMutation, useDeleteUserMutation, useGetUsersQuery, useUpdateUserMutation } from "../../services/Api/users.api";
 import { useGetRolesQuery } from "../../services/Api/roles.api";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 type UserRole = {
     id: number;
@@ -41,11 +43,13 @@ type UserRole = {
 const UsersAndRoles: React.FC = () => {
 
 
-    const [addUser] = useCreateUserMutation()
-    const [updateUser] = useUpdateUserMutation()
+    const [addUser, { isLoading: isAddLoading }] = useCreateUserMutation()
+    const [updateUser, { isLoading: isUpdateLoading }] = useUpdateUserMutation()
 
 
     const [search, setSearch] = useState("");
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<string | null>(null);
     const [addUserToggle, setAddUserToggle] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(6);
@@ -53,7 +57,7 @@ const UsersAndRoles: React.FC = () => {
     const [initialValues, setInitialValues] = useState(null);
 
 
-    const { data: rows } = useGetUsersQuery({
+    const { data: rows, isLoading } = useGetUsersQuery({
         limit: rowsPerPage,
         offset: page
     })
@@ -108,11 +112,23 @@ const UsersAndRoles: React.FC = () => {
 
     //  --- delete
 
-    const [deleteUser] = useDeleteUserMutation()
+    const [deleteUser, { isLoading: isDeleteLoading }] = useDeleteUserMutation()
 
     function handleDelete(userId) {
-        deleteUser(userId)
+        setUserToDelete(userId);
+        setDeleteDialogOpen(true);
     }
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
+        try {
+            await deleteUser(Number(userToDelete)).unwrap();
+            setDeleteDialogOpen(false);
+            setUserToDelete(null);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
 
     return (
@@ -238,89 +254,108 @@ const UsersAndRoles: React.FC = () => {
                         </TableHead>
 
                         <TableBody>
-                            {filteredRows?.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    hover
-                                    sx={{
-                                        "& td": {
-                                            borderBottom: "1px solid #f1f5f9",
-                                        },
-                                    }}
-                                >
-                                    <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
-                                        <Typography
-                                            sx={{ fontSize: "0.82rem", fontWeight: 500, color: "#111827", lineHeight: 1.4 }}
-                                        >
-                                            {row.full_name}
-                                        </Typography>
-                                        <Typography sx={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 500, lineHeight: 1 }}>
-                                            {row.email}
-                                        </Typography>
-                                    </TableCell>
-
-                                    <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
-                                        <Typography
-                                            sx={{ fontSize: "0.72rem", fontWeight: 500, color: "#52525b", lineHeight: 1.4, background: "#f7f7f7", padding: "2px 8px", borderRadius: "8px", width: "max-content", textTransform: "capitalize" }}
-                                        >
-                                            {roleNameFind(row.role)}
-                                        </Typography>
-                                    </TableCell>
-
-
-                                    <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
-                                        <Chip
-                                            label={row.is_active ? "Active" : "Inactive"}
-                                            sx={{
-                                                fontSize: "0.7rem",
-                                                backgroundColor: row.is_active ? "#E7F6EA" : "#fbeae8",
-                                                color: row.is_active ? "#1B8E3E" : "#c62828",
-                                                fontWeight: 600,
-                                                borderRadius: "10px",
-
-                                            }}
-                                        />
-                                    </TableCell>
-
-                                    <TableCell align="center">
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                gap: 1,
-                                            }}
-                                        >
-                                            <IconButton
-                                                onClick={() => handleIsEdit(row)}
-                                                size="small"
-
-                                                sx={{
-                                                    color: "#6b7280",
-                                                    "&:hover": { color: "#0d9488", bgcolor: "#f0fdfa" },
-                                                    borderRadius: 1.5,
-                                                }}
-                                            >
-                                                <Edit sx={{ fontSize: 15 }} />
-                                            </IconButton>
-
-                                            <IconButton
-
-                                                onClick={() => handleDelete(row?.id)}
-                                                size="small"
-
-                                                sx={{
-                                                    color: "#dc2626",
-                                                    "&:hover": { color: "#ac2020ff", bgcolor: "#fff7ed" },
-                                                    borderRadius: 1.5,
-                                                }}
-                                            >
-                                                <Delete sx={{ fontSize: 15 }} />
-                                            </IconButton>
-                                        </Box>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
+                                        <CircularProgress size={32} sx={{ color: "#0d9488" }} />
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ) : filteredRows?.length == 0 ?
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={6}
+                                        align="center"
+                                        sx={{
+                                            py: 10,
+                                            color: "#9ca3af",
+                                            fontSize: "0.82rem",
+                                            borderBottom: "none",
+                                        }}
+                                    >No Data Found</TableCell>
+                                </TableRow>
+                                : filteredRows?.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        hover
+                                        sx={{
+                                            "& td": {
+                                                borderBottom: "1px solid #f1f5f9",
+                                            },
+                                        }}
+                                    >
+                                        <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
+                                            <Typography
+                                                sx={{ fontSize: "0.82rem", fontWeight: 500, color: "#111827", lineHeight: 1.4 }}
+                                            >
+                                                {row.full_name}
+                                            </Typography>
+                                            <Typography sx={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 500, lineHeight: 1 }}>
+                                                {row.email}
+                                            </Typography>
+                                        </TableCell>
+
+                                        <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
+                                            <Typography
+                                                sx={{ fontSize: "0.72rem", fontWeight: 500, color: "#52525b", lineHeight: 1.4, background: "#f7f7f7", padding: "2px 8px", borderRadius: "8px", width: "max-content", textTransform: "capitalize" }}
+                                            >
+                                                {roleNameFind(row.role)}
+                                            </Typography>
+                                        </TableCell>
+
+
+                                        <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
+                                            <Chip
+                                                label={row.is_active ? "Active" : "Inactive"}
+                                                sx={{
+                                                    fontSize: "0.7rem",
+                                                    backgroundColor: row.is_active ? "#E7F6EA" : "#fbeae8",
+                                                    color: row.is_active ? "#1B8E3E" : "#c62828",
+                                                    fontWeight: 600,
+                                                    borderRadius: "10px",
+
+                                                }}
+                                            />
+                                        </TableCell>
+
+                                        <TableCell align="center">
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <IconButton
+                                                    onClick={() => handleIsEdit(row)}
+                                                    size="small"
+
+                                                    sx={{
+                                                        color: "#6b7280",
+                                                        "&:hover": { color: "#0d9488", bgcolor: "#f0fdfa" },
+                                                        borderRadius: 1.5,
+                                                    }}
+                                                >
+                                                    <Edit sx={{ fontSize: 15 }} />
+                                                </IconButton>
+
+                                                <IconButton
+
+                                                    onClick={() => handleDelete(row?.id)}
+                                                    size="small"
+
+                                                    sx={{
+                                                        color: "#dc2626",
+                                                        "&:hover": { color: "#ac2020ff", bgcolor: "#fff7ed" },
+                                                        borderRadius: 1.5,
+                                                    }}
+                                                >
+                                                    <Delete sx={{ fontSize: 15 }} />
+                                                </IconButton>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
                         </TableBody>
                     </Table>
 
@@ -343,9 +378,21 @@ const UsersAndRoles: React.FC = () => {
 
             {
                 addUserToggle && (
-                    <UserFormModal open={addUserToggle} onClose={() => setAddUserToggle(false)} onsubmit={isEdit ? handleEditUserSubmit : handleAdd} isEdit={isEdit} initialValues={isEdit ? initialValues : null} />
+                    <UserFormModal open={addUserToggle} onClose={() => setAddUserToggle(false)} onsubmit={isEdit ? handleEditUserSubmit : handleAdd} isEdit={isEdit} initialValues={isEdit ? initialValues : null} isLoading={isEdit ? isUpdateLoading : isAddLoading} />
                 )
             }
+
+            <ConfirmDialog
+                open={deleteDialogOpen}
+                title="Delete User"
+                message="Are you sure you want to delete this user? This action cannot be undone."
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setDeleteDialogOpen(false);
+                    setUserToDelete(null);
+                }}
+                isLoading={isDeleteLoading}
+            />
         </Box >
     );
 };

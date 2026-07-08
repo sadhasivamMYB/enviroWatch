@@ -10,6 +10,7 @@ import {
     Stack,
     TextField,
     Typography,
+    CircularProgress,
 } from "@mui/material";
 
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -24,6 +25,7 @@ type UserModalProps = {
     onsubmit: (data: any) => void;
     onClose: () => void;
     isEdit?: boolean;
+    isLoading?: boolean;
 };
 
 const defaultFormData = {
@@ -41,6 +43,7 @@ const UserFormModal: React.FC<UserModalProps> = ({
     onClose,
     isEdit = false,
     onsubmit,
+    isLoading = false,
 }) => {
     const { data: roles = [] } = useGetRolesQuery();
 
@@ -329,6 +332,7 @@ const UserFormModal: React.FC<UserModalProps> = ({
                     <Button
                         onClick={handleClose}
                         variant="outlined"
+                        disabled={isLoading}
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
@@ -340,6 +344,7 @@ const UserFormModal: React.FC<UserModalProps> = ({
                     <Button
                         onClick={handleSubmit}
                         variant="contained"
+                        disabled={isLoading}
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
@@ -350,7 +355,7 @@ const UserFormModal: React.FC<UserModalProps> = ({
                             },
                         }}
                     >
-                        {isEdit ? "Update" : "Create"}
+                        {isLoading ? <CircularProgress size={24} color="inherit" /> : (isEdit ? "Update" : "Create")}
                     </Button>
                 </Box>
             </DialogContent>

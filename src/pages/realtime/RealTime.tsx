@@ -4,6 +4,7 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import {
     Box,
     Button,
+    CircularProgress,
     Grid
 } from "@mui/material";
 import { useState } from "react";
@@ -12,28 +13,28 @@ import { useNavigate } from "react-router-dom";
 import { useGetLocationsQuery } from "../../services/Api/location.api";
 import PageTitle from "../../components/Pagetitle";
 import { KeyboardArrowDownOutlined } from "@mui/icons-material";
-import { useGetDashboardSummaryQuery } from "../../services/Api/dashboard.api";
+import { useGetDashboardQuery } from "../../services/Api/dashboard.api";
 
 
-const FILTERS = ["all", "normal", "warning", "alert"];
-
+const FILTERS = ["all", "normal", "alert"];
 const Realtime = () => {
     const [filter, setFilter] = useState<string>("all");
     const navigate = useNavigate();
 
-    const { data: dashboardSummary } = useGetDashboardSummaryQuery()
+    const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardQuery()
+
+    console.log(dashboardData, "dashboardData")
 
     const next_Pg = (e: any) => {
         // console.log(e, "Next page URL")
         navigate(`/view-detail/${e}`)
     }
 
-    const { data: locationData, isLoading: locationLoading } = useGetLocationsQuery({ limit: null, offset: null })
-
+    const locationData = dashboardData?.locations || []
     const filteredCards =
         filter === "all"
-            ? locationData?.locations || []
-            : locationData?.locations?.filter((c: any) => c.is_active === filter);
+            ? locationData || []
+            : locationData?.filter((c: any) => c.is_active === filter);
 
     return (
         <Box sx={{ bgcolor: "#fff", borderRadius: "20px" }}>
@@ -42,9 +43,9 @@ const Realtime = () => {
 
             {/* Stats */}
             <Box sx={{ display: "flex", gap: 2, my: 3 }}>
-                <RealtimeStatCard count={dashboardSummary?.total_locations || 0} label="Total Location" />
-                <RealtimeStatCard count={dashboardSummary?.active_alerts || 0} label="Active Alerts" />
-                <RealtimeStatCard count={(dashboardSummary?.total_locations - dashboardSummary?.active_alerts) || 0} label="All Normal" />
+                <RealtimeStatCard count={dashboardData?.summary?.total_locations || 0} label="Total Location" />
+                <RealtimeStatCard count={dashboardData?.summary?.active_alerts || 0} label="Active Alerts" />
+                <RealtimeStatCard count={(dashboardData?.summary?.total_locations - dashboardData?.summary?.active_alerts) || 0} label="All Normal" />
             </Box>
 
             {/* Filter + Export */}
@@ -118,11 +119,13 @@ const Realtime = () => {
             {/* Cards */}
 
             {
-                locationLoading ? <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>Loading...</Box> : (
+                dashboardLoading ? <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+                    <CircularProgress size={32} sx={{ color: "#0d9488" }} />
+                </Box> : (
                     <Grid container spacing={2.5} sx={{ mt: 2 }}>
                         {filteredCards?.map((card, i) => (
                             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
-                                <FacilityCard data={card} onViewDetails={next_Pg} />
+                                <FacilityCard data={card} status={locationData?.active_alerts} onViewDetails={next_Pg} />
                             </Grid>
                         ))}
                     </Grid>

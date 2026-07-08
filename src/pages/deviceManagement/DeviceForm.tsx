@@ -14,6 +14,7 @@ import {
     Stack,
     TextField,
     Typography,
+    CircularProgress,
 } from '@mui/material';
 // import { useGetSensorsQuery } from '../../services/Api/sensors.api';
 import { useGetLocationsQuery } from '../../services/Api/location.api';
@@ -118,15 +119,25 @@ export const sensorsList = [
         metric_key: "co2",
         display_name: "CO2",
         unit: "ppm"
-    }
+    },
+    {
+        metric_key: "pm2.5",
+        display_name: "PM2.5",
+        unit: "µg/m³"
+    },
+    {
+        metric_key: "so2",
+        display_name: "SO2",
+        unit: "ppb"
+    },
 ];
 
 
-export default function DeviceManagementForm({ open, onclose, isEdit, initialValues, onsubmit }: { open: boolean, onclose: () => void, isEdit: boolean, initialValues?: any, onsubmit: any }) {
+export default function DeviceManagementForm({ open, onclose, isEdit, initialValues, onsubmit, isLoading = false }: { open: boolean, onclose: () => void, isEdit: boolean, initialValues?: any, onsubmit: any, isLoading?: boolean }) {
 
 
     console.log(initialValues, "⚠️😎🔃")
-    const [selectedLocation, setSelectedLocation] = useState('warehousw Q');
+    const [selectedLocation, setSelectedLocation] = useState('');
     const [deviceName, setDeviceName] = useState('');
     const [deviceType, setDeviceType] = useState('');
     const [selectedSensors, setSelectedSensors] = useState<any[]>([]);
@@ -134,7 +145,7 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
     const [status, setStatus] = useState("");
 
 
-    const { data: location } = useGetLocationsQuery()
+    const { data: location } = useGetLocationsQuery({ limit: null, offset: null })
 
     const locations = location?.locations
 
@@ -272,9 +283,13 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
                                     label="Device Type"
                                     onChange={(e) => setDeviceType(e.target.value as string)}
                                 >
-                                    <MenuItem sx={{ fontSize: 12 }} value="temperature">Temperature</MenuItem>
-                                    <MenuItem sx={{ fontSize: 12 }} value="humidity">Humidit</MenuItem>
-                                    <MenuItem sx={{ fontSize: 12 }} value="co2">CO2</MenuItem>
+
+                                    <MenuItem sx={{ fontSize: 12 }} value="temperature">Temperature Senosor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="light">Light Senosor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="noice">Noice Senosor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="tds">TDS Senosor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="ph">PH Senosor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="cod">COD Senosor</MenuItem>
 
                                 </Select>
                             </FormControl>
@@ -405,6 +420,7 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
                     <Button
                         onClick={onclose}
                         variant="outlined"
+                        disabled={isLoading}
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
@@ -418,7 +434,7 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
                     </Button>
 
                     <Button
-
+                        disabled={isLoading}
                         onClick={onhandleSave}
                         variant="contained"
                         sx={{
@@ -434,7 +450,7 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
                             },
                         }}
                     >
-                        {isEdit ? "Update Device" : "Save Device"}
+                        {isLoading ? <CircularProgress size={24} color="inherit" /> : (isEdit ? "Update Device" : "Save Device")}
                     </Button>
                 </Box>
             </DialogActions>

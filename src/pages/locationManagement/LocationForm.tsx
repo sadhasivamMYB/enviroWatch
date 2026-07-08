@@ -10,6 +10,7 @@ import {
     Stack,
     TextField,
     Typography,
+    CircularProgress,
 } from "@mui/material";
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 
@@ -22,6 +23,7 @@ type LocationModalProps = {
     onsubmit: any;
     onClose: () => void;
     isEdit?: boolean;
+    isLoading?: boolean;
 };
 
 const LocationFormModal: React.FC<LocationModalProps> = ({
@@ -30,6 +32,7 @@ const LocationFormModal: React.FC<LocationModalProps> = ({
     onClose,
     onsubmit,
     isEdit,
+    isLoading = false,
 }) => {
 
 
@@ -52,18 +55,18 @@ const LocationFormModal: React.FC<LocationModalProps> = ({
     });
 
 
-useEffect(() => {
-    if(initialValues){
+    useEffect(() => {
+        if (initialValues) {
 
-    
-    setFormData({
-                  name: initialValues.name ,
-                  description: initialValues.description ,
-                  status: String(initialValues.is_active ?? ""),
-                  code: initialValues.code
-              })
-            }
-}, [initialValues, open]);
+
+            setFormData({
+                name: initialValues.name,
+                description: initialValues.description,
+                status: String(initialValues.is_active ?? ""),
+                code: initialValues.code
+            })
+        }
+    }, [initialValues, open]);
 
 
 
@@ -85,13 +88,13 @@ useEffect(() => {
             name: formData.name,
             description: formData.description,
             code: formData.name.slice(0, 2).toUpperCase() + Math.floor(Math.random() * 1000),
-            ...(isEdit && { is_active: formData.status, location_id: Number( initialValues?.id) })
+            ...(isEdit && { is_active: formData.status, location_id: Number(initialValues?.id) })
         }
         onsubmit(payload)
         onClose();
     };
 
- 
+
 
     return (
         <Dialog
@@ -273,6 +276,7 @@ useEffect(() => {
                     <Button
                         onClick={onClose}
                         variant="outlined"
+                        disabled={isLoading}
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
@@ -288,6 +292,7 @@ useEffect(() => {
                     <Button
                         onClick={handleSubmit}
                         variant="contained"
+                        disabled={isLoading}
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
@@ -301,7 +306,7 @@ useEffect(() => {
                             },
                         }}
                     >
-                        {isEdit ? "Update" : "Create"}
+                        {isLoading ? <CircularProgress size={24} color="inherit" /> : (isEdit ? "Update" : "Create")}
                     </Button>
 
                 </Box>

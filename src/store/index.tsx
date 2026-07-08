@@ -8,6 +8,7 @@ import { dashboardApi } from "../services/Api/dashboard.api";
 import { historicalApi } from "../services/Api/historical";
 import { usersApi } from "../services/Api/users.api";
 import { roleApi } from "../services/Api/roles.api";
+
 export const apiSlice = [
     locationApi, alertsApi, sensorsApi, loginApi, devicesApi, metricsApi, dashboardApi, historicalApi, usersApi, roleApi];
 

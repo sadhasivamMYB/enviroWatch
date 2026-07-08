@@ -7,7 +7,7 @@ import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import LocationWise from "./LocationWise";
 import PageTitle from "../../components/Pagetitle";
 import Back from "../../components/Back";
-import { useGetLocationsQuery } from "../../services/Api/location.api";
+import { useGetLocationIdDevicesQuery, useGetLocationsQuery } from "../../services/Api/location.api";
 
 
 
@@ -41,12 +41,16 @@ const Historical = () => {
     function FilterBar({ mode }: FilterBarProps) {
         const [location, setLocation] = useState<string[]>([]);
         const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
-        const [device, setDevice] = useState("TempSense Pr...");
+
         const [from] = useState("30-03-2026");
         const [to] = useState("06-04-2026");
         const [gran, setGran] = useState("Hourly");
         const [parameter, setParameter] = useState("Temperature");
-        const { data: locations, isLoading: locationsLoading, isError: locationsError } = useGetLocationsQuery()
+        const { data: locations, isLoading: locationsLoading, isError: locationsError } = useGetLocationsQuery({ limit: null, offset: null })
+        const { data: device, isLoading: deviceLoading, isError: deviceError } = useGetLocationIdDevicesQuery({ location_id: location[0] })
+
+        console.log(device)
+        const LocationsData = locations?.locations
         return (
             <Box sx={{ display: "flex", gap: 2, justifyContent: "space-between", flexWrap: "wrap" }}>
                 <Box sx={{ display: "flex", gap: 1.2, flexWrap: "wrap" }}>
@@ -55,9 +59,16 @@ const Historical = () => {
                             <FormControl sx={inputStyles}>
                                 <InputLabel>Location</InputLabel>
                                 <Select sx={inputStyles} value={location} label="Location" onChange={(e: any) => setLocation(e.target.value)}>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="Warehouse A">Warehouse A</MenuItem>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="Warehouse B">Warehouse B</MenuItem>
-                                </Select>
+                                    {LocationsData?.map((item: any) => (
+                                        <MenuItem
+                                            sx={{ fontSize: "13px" }}
+                                            key={item.id}
+                                            value={item.id}
+
+                                        >
+                                            {item.name}
+                                        </MenuItem>
+                                    ))}</Select>
                             </FormControl>
                             <FormControl sx={inputStyles}>
                                 <InputLabel>Device Name</InputLabel>
@@ -88,16 +99,16 @@ const Historical = () => {
                                     }}
                                     renderValue={(selected) => `${selected.length} selected`}
                                 >
-                                    {locations?.map((item) => (
+                                    {LocationsData?.map((item: any) => (
                                         <MenuItem
                                             sx={{ fontSize: "13px" }}
-                                            key={item}
-                                            value={item}
+                                            key={item.id}
+                                            value={item.id}
                                             disabled={
-                                                selectedLocation.length >= 4 && !selectedLocation.includes(item)
+                                                selectedLocation.length >= 4 && !selectedLocation.includes(item.id)
                                             }
                                         >
-                                            {item}
+                                            {item.name}
                                         </MenuItem>
                                     ))}
                                 </Select>

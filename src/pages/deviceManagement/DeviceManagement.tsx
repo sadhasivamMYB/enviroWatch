@@ -11,22 +11,21 @@ import {
     TableRow,
     IconButton,
     Tooltip,
+    CircularProgress,
 } from "@mui/material";
 import {
     Add,
     Edit,
-    Delete,
-    Rowing,
+    Delete
 } from "@mui/icons-material";
 
 import DeviceManagementForm, { sensorsList } from "./DeviceForm";
 import { useGetLocationIdDevicesQuery, useGetLocationsQuery } from "../../services/Api/location.api";
-import { useAddDeviceMutation, useDeleteDeviceMutation, useGetDevicesQuery, useUpdateDeviceMutation } from "../../services/Api/device.api";
+import { useAddDeviceMutation, useDeleteDeviceMutation, useUpdateDeviceMutation } from "../../services/Api/device.api";
 import PageTitle from "../../components/Pagetitle";
 import SearchBar from "../../components/SearchBar";
 import CommonPagination from "../../components/Pagination";
 import StatusBadge from "../../components/StatusBadge";
-import { useGetMetricsQuery } from "../../services/Api/metrics";
 
 const columns = [
     { label: "Sensor Name", width: 180 },
@@ -47,12 +46,14 @@ export default function AlertManagement() {
     const [selectedRow, setSelectedRow] = useState(null);
 
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(6);
 
 
     const { data: locationData } = useGetLocationsQuery({ limit: null, offset: null });
 
     const LocationData = locationData?.locations
+
+    console.log(LocationData, "😎😎😎")
 
     const [addDevice, { isLoading: isAddLoading }] = useAddDeviceMutation();
     const [updateDevice, { error: updateError, isLoading: isUpdateLoading }] = useUpdateDeviceMutation()
@@ -65,7 +66,7 @@ export default function AlertManagement() {
             ? Number(locationData.locations[0].id)
             : undefined);
 
-    const { data: locationDevices } = useGetLocationIdDevicesQuery(
+    const { data: locationDevices, isLoading: fetchingDevicesLoading } = useGetLocationIdDevicesQuery(
         {
             location_id: selectedLocationId,
             limit: rowsPerPage,
@@ -74,7 +75,8 @@ export default function AlertManagement() {
         {
             skip: !selectedLocationId,
         }
-    ); console.log(locationDevices?.devices, "Location Devices")
+    );
+    const isLoading = fetchingDevicesLoading;
 
 
     const [open, setOpen] = useState(false);
@@ -244,7 +246,13 @@ export default function AlertManagement() {
                                 </TableHead>
 
                                 <TableBody>
-                                    {filtered?.length == 0 ?
+                                    {isLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                                <CircularProgress size={32} sx={{ color: "#0d9488" }} />
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : filtered?.length == 0 ?
                                         <TableRow>
                                             <TableCell
                                                 colSpan={6}

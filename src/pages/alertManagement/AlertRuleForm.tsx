@@ -11,7 +11,7 @@ import {
     Stack,
     TextField,
     Typography,
-
+    CircularProgress,
     Paper,
 } from '@mui/material';
 import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
@@ -19,12 +19,13 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { inputStyles } from '../../theme';
 import { useGetLocationIdDevicesQuery, useGetLocationsQuery } from '../../services/Api/location.api';
-import { useGetDeviceIdByMetricsQuery } from '../../services/Api/device.api';
 
-export default function AddRuleDialog({ open, onclose, isEdit, initialValues, onsubmit }: any) {
+
+export default function AddRuleDialog({ open, onclose, isEdit, initialValues, onsubmit, isLoading = false }: any) {
 
     const [location, setLocation] = useState('');
     const [device, setDevice] = useState<number | null>(null);
+    const [ruleName, setRuleName] = useState<string>("");
     const [sensor, setSensor] = useState([]);
     const [selectedSensor, setSelectedSensor] = useState<any>(null);
     const [selectedSensorValue, setSelectedSensorValue] = useState<any>(null);
@@ -40,43 +41,52 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
     const LocationsData = locations?.locations
     const DeviceData = devices?.devices
 
-    console.log(sensor, "❌❌❌✨")
-    console.log(selectedSensor, "🙌🎊🩺")
-
-
-
 
     useEffect(() => {
-        if (open && initialValues) {
-            // setLocation(initialValues.location);
-            // setDevice(initialValues.device);
-            setSelectedSensor(initialValues.metric_id);
-            setMinValue(initialValues.min_value);
-            setMaxValue(initialValues.max_value);
+        if (open && isEdit && initialValues) {
+            setLocation(initialValues.location_id || '');
+            setDevice(initialValues.device_id || null);
+            setSelectedSensor(initialValues.metric_key || null);
+            setRuleName(initialValues.rule_name || "");
+            setMinValue(initialValues.min_value || 15);
+            setMaxValue(initialValues.max_value || 26);
             setStatus(initialValues.is_active ? "Active" : "Inactive");
+        } else if (open && !isEdit) {
+            setLocation('');
+            setDevice(null);
+            setRuleName("");
+            setSensor([]);
+            setSelectedSensor(null);
+            setSelectedSensorValue(null);
+            setMinValue(15);
+            setMaxValue(26);
+            setStatus("Active");
         }
-    }, [open])
+    }, [open, isEdit, initialValues])
 
 
     const handleSubmit = () => {
-
-        console.log(selectedSensor, "selectedSensor")
-        console.log(sensor, "sensor")
-
-        const payload = {
-            metric_id: selectedSensorValue?.id,
-            rule_name: "",
-            // min_value: String(minValue) + " " + selectedSensorValue?.unit,
-            // max_value: String(maxValue) + " " + selectedSensorValue?.unit,
-            min_value: minValue,
-            max_value: maxValue,
-            severity: "medium",
-            ...(isEdit && { is_active: status == "Active" ? 1 : 0 })
+        if (isEdit) {
+            const payload = {
+                ...initialValues,
+                rule_name: ruleName,
+                min_value: Number(minValue),
+                max_value: Number(maxValue),
+                is_active: status === "Active",
+            };
+            onsubmit(payload);
+        } else {
+            const payload = {
+                metric_id: selectedSensorValue?.id,
+                rule_name: ruleName,
+                min_value: Number(minValue),
+                max_value: Number(maxValue),
+                severity: "medium",
+            };
+            onsubmit(payload);
         }
 
-        // onsubmit(payload)
-        console.log(payload)
-        // onclose()
+        onclose()
     }
 
     return (
@@ -148,6 +158,26 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                 >
                     <Stack spacing={3}>
                         <Stack direction="row" spacing={2.5}>
+
+                            <FormControl fullWidth sx={inputStyles}>
+
+                                <TextField
+                                    value={ruleName}
+                                    onChange={(e) => setRuleName(e.target.value)}
+                                    placeholder="Enter rule name"
+                                    fullWidth
+                                    sx={inputStyles}
+                                    InputProps={{
+                                        sx: {
+                                            borderRadius: "12px",
+                                            padding: "8px 14px",
+                                            fontSize: "13px",
+                                            height: "40px",
+                                        }
+                                    }}
+                                />
+                            </FormControl>
+
                             <FormControl fullWidth sx={inputStyles}>
                                 <InputLabel>Location</InputLabel>
                                 <Select
@@ -155,9 +185,10 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                     label="Location"
                                     onChange={(e) => setLocation(e.target.value)}
                                     sx={selectStyles}
+                                    disabled={isEdit}
                                 >
                                     {
-                                        LocationsData?.map((item) => (
+                                        LocationsData?.map((item: any) => (
                                             <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.id}>
                                                 {item.name}
                                             </MenuItem>
@@ -166,6 +197,10 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                 </Select>
                             </FormControl>
 
+
+                        </Stack>
+
+                        <Stack direction="row" spacing={2.5}>
                             <FormControl fullWidth sx={inputStyles}>
                                 <InputLabel>Device Name</InputLabel>
                                 <Select
@@ -173,10 +208,11 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                     label="Device Name"
                                     onChange={(e) => setDevice(e.target.value)}
                                     sx={selectStyles}
+                                    disabled={isEdit}
                                 >
 
                                     {
-                                        DeviceData?.map((item) => (
+                                        DeviceData?.map((item: any) => (
                                             <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.id} onClick={() => setSensor(item.sensors)}>
                                                 {item.name}
                                             </MenuItem>
@@ -185,9 +221,6 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
 
                                 </Select>
                             </FormControl>
-                        </Stack>
-
-                        <Box>
                             <FormControl fullWidth sx={inputStyles}>
                                 <InputLabel>Sensor</InputLabel>
                                 <Select
@@ -195,15 +228,20 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                     label="Sensor"
                                     onChange={(e) => setSelectedSensor(e.target.value)}
                                     sx={selectStyles}
+                                    disabled={isEdit}
                                 >
-                                    {sensor?.map((item: any) => (
-                                        <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.metric_key} onClick={() => setSelectedSensorValue(item)}>
-                                            {item.display_name}
-                                        </MenuItem>
-                                    ))}
+                                    {isEdit ? (
+                                        <MenuItem value={selectedSensor}>{initialValues?.sensor_name || selectedSensor}</MenuItem>
+                                    ) : (
+                                        sensor?.map((item: any) => (
+                                            <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.metric_key} onClick={() => setSelectedSensorValue(item)}>
+                                                {item.display_name}
+                                            </MenuItem>
+                                        ))
+                                    )}
                                 </Select>
                             </FormControl>
-                        </Box>
+                        </Stack>
 
                         <Paper
                             variant="outlined"
@@ -516,6 +554,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                     <Button
                         onClick={onclose}
                         variant="outlined"
+                        disabled={isLoading}
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
@@ -531,6 +570,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                     <Button
                         onClick={handleSubmit}
                         variant="contained"
+                        disabled={isLoading}
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
@@ -544,7 +584,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                             },
                         }}
                     >
-                        {isEdit ? "Update Rule" : "Add Rule"}
+                        {isLoading ? <CircularProgress size={24} color="inherit" /> : (isEdit ? "Update Rule" : "Add Rule")}
                     </Button>
 
                 </Box>
