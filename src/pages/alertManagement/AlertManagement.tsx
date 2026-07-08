@@ -11,6 +11,7 @@ import {
     TableRow,
     IconButton,
     Tooltip,
+    CircularProgress,
 } from "@mui/material";
 import {
     Add,
@@ -23,20 +24,27 @@ import PageTitle from "../../components/Pagetitle";
 import StatusBadge from "../../components/StatusBadge";
 import CommonPagination from "../../components/Pagination";
 import { useGetLocationsQuery } from "../../services/Api/location.api";
-import { useAddAlertRuleMutation, useGetAlertRulesQuery } from "../../services/Api/alerts.api";
+import { useAddAlertRuleMutation, useGetAlertRulesQuery, useUpdateAlertRuleMutation } from "../../services/Api/alerts.api";
 
 // Types
 
 
 
 export default function AlertManagement() {
-    const [activeLocation, setActiveLocation] = useState("warehouse-a");
+    const [activeLocation, setActiveLocation] = useState("");
+    console.log(activeLocation, "activeLocation ❌❌❌❌")
     const [search, setSearch] = useState("");
     const [sensorFilter, setSensorFilter] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState(null);
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, activeLocation, sensorFilter, statusFilter]);
 
     const { data: locationData } = useGetLocationsQuery({ limit: null, offset: null })
-    const { data: alertData } = useGetAlertRulesQuery()
+    const { data: alertData, isLoading: isAlertsLoading } = useGetAlertRulesQuery()
 
     console.log(alertData, "🔃🔃🔃🔃")
 
@@ -44,6 +52,7 @@ export default function AlertManagement() {
 
     // const { data: DeviceData } = useGetDevicesQuery(activeLocation);
     const [AddAlertRule, { isLoading }] = useAddAlertRuleMutation()
+    const [UpdateAlertRule] = useUpdateAlertRuleMutation()
 
     const activeLabel = LocationData?.find((l) => l.id === activeLocation)?.name ?? "";
 
@@ -51,40 +60,51 @@ export default function AlertManagement() {
         setActiveLocation(LocationData?.[0].id || "");
     }, [LocationData]);
 
-    const filtered = alertData?.filter((r) => {
+    const filtered = alertData?.filter((r: any) => {
         const matchesSearch =
             search === "" ||
-            r?.rule_name?.toLowerCase()?.includes(search?.toLowerCase())
-        //     r?.deviceCode?.toLowerCase()?.includes(search?.toLowerCase()) ||
-        //     r?.sensors?.some((s: any) => s?.toLowerCase()?.includes(search?.toLowerCase()));
-        // const result = matchesSearch
-        return matchesSearch
+            r?.rule_name?.toLowerCase()?.includes(search?.toLowerCase());
+        const matchesLocation = Number(r?.location_id) === Number(activeLocation);
+        return matchesSearch && matchesLocation;
     });
+
+    const paginatedData = filtered?.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
     const handleDelete = (id: string) => {
         // handler placeholder
         console.log("Delete", id);
     };
 
+    const [open, setOpen] = useState(false)
+    const [editMode, setEditMode] = useState(false);
+    const [editData, setEditData] = useState<any>(null);
+
     const handleEdit = (id: string) => {
-        console.log("Edit", id);
+        const itemToEdit = alertData?.find((item: any) => item.id === id);
+        if (itemToEdit) {
+            setEditData(itemToEdit);
+            setEditMode(true);
+            setOpen(true);
+        }
     };
 
-    const [open, setOpen] = useState(false)
-
+    const handleClose = () => {
+        setOpen(false);
+        setEditMode(false);
+        setEditData(null);
+    };
 
     const handleSubmit = async (data: any) => {
         try {
-            await AddAlertRule(data).unwrap()
-            setOpen(false)
+            if (editMode && editData) {
+                await UpdateAlertRule({ id: editData.id, body: data }).unwrap();
+            } else {
+                await AddAlertRule(data).unwrap();
+            }
+            handleClose();
         } catch (error) {
             console.log(error)
         }
-    }
-
-
-    if (open) {
-        return <AddRuleDialog open={open} onclose={() => setOpen(false)} isEdit={false} initialValues={undefined} onsubmit={handleSubmit} />
     }
 
     return (
@@ -98,6 +118,15 @@ export default function AlertManagement() {
         >
             {/* Page Title */}
             <PageTitle title="Alert Management" />
+
+            {/* Dialog */}
+            <AddRuleDialog
+                open={open}
+                onclose={handleClose}
+                isEdit={editMode}
+                initialValues={editData}
+                onsubmit={handleSubmit}
+            />
 
             {/* Body */}
             <Box
@@ -284,7 +313,13 @@ export default function AlertManagement() {
                                 </TableHead>
 
                                 <TableBody>
-                                    {filtered?.length === 0 ? (
+                                    {isAlertsLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                                <CircularProgress size={32} sx={{ color: "#0d9488" }} />
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : !paginatedData || paginatedData?.length === 0 ? (
                                         <TableRow>
                                             <TableCell
                                                 colSpan={6}
@@ -300,7 +335,7 @@ export default function AlertManagement() {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filtered?.map((row, idx) => (
+                                        paginatedData?.map((row: any, idx: number) => (
                                             <TableRow
                                                 key={row.id}
                                                 sx={{
@@ -352,7 +387,17 @@ export default function AlertManagement() {
                                                         borderBottom: "1px solid #f3f4f6",
                                                     }}
                                                 >
-                                                    {row?.metric_id}
+                                                    <Typography sx={{
+                                                        fontSize: "0.7rem",
+                                                        backgroundColor: "#eaeaea",
+                                                        borderRadius: "4px",
+                                                        padding: "2px 4px",
+                                                        width: "fit-content",
+                                                        color: "#474747",
+                                                    }}>
+
+                                                        {row?.metric_key}
+                                                    </Typography>
                                                     {/* <Tooltip
                                                         arrow
                                                         placement="top"
@@ -442,7 +487,7 @@ export default function AlertManagement() {
                                                             fontWeight: 500,
                                                         }}
                                                     >
-                                                        {row.min_value}
+                                                        {row.min_value} {row.unit}
                                                     </Typography>
                                                 </TableCell>
 
@@ -461,7 +506,7 @@ export default function AlertManagement() {
                                                             fontWeight: 500,
                                                         }}
                                                     >
-                                                        {row.max_value}
+                                                        {row.max_value} {row.unit}
                                                     </Typography>
                                                 </TableCell>
 
@@ -547,11 +592,11 @@ export default function AlertManagement() {
                         }}
                     >
                         <CommonPagination
-                            page={1}
-                            rowsPerPage={5}
-                            setRowsPerPage={10}
-                            total_items={2}
-                            setPage={1}
+                            page={page}
+                            rowsPerPage={rowsPerPage}
+                            setRowsPerPage={setRowsPerPage}
+                            total_items={filtered?.length || 0}
+                            setPage={setPage}
                         />
                     </Box>
                 </Box>

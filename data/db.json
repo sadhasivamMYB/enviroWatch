@@ -9,9 +9,9 @@
       "totalDevices": 8,
       "activeDevices": 6,
       "inactiveDevices": 2,
-      "temperature":23,
-      "aqi":30,
-      "humidity":50
+      "temperature": 23,
+      "aqi": 30,
+      "humidity": 50
     },
     {
       "id": "reception",
@@ -22,9 +22,9 @@
       "totalDevices": 6,
       "activeDevices": 5,
       "inactiveDevices": 1,
-      "temperature":32,
-      "aqi":32,
-      "humidity":60
+      "temperature": 32,
+      "aqi": 32,
+      "humidity": 60
     },
     {
       "id": "cold-storage",
@@ -35,9 +35,9 @@
       "totalDevices": 10,
       "activeDevices": 7,
       "inactiveDevices": 3,
-      "temperature":-2,
-      "aqi":20,
-      "humidity":30
+      "temperature": -2,
+      "aqi": 20,
+      "humidity": 30
     },
     {
       "id": "server-room",
@@ -48,12 +48,11 @@
       "totalDevices": 12,
       "activeDevices": 11,
       "inactiveDevices": 1,
-      "temperature":20,
-      "aqi":25,
-      "humidity":45
+      "temperature": 20,
+      "aqi": 25,
+      "humidity": 45
     }
   ],
-
   "locationOverview": [
     {
       "id": 1,
@@ -132,7 +131,6 @@
       "inactiveDevices": 1
     }
   ],
-
   "smallStats": [
     {
       "id": 1,
@@ -185,7 +183,6 @@
       "iconColor": "#DB2777"
     }
   ],
-
   "airQualityData": [
     {
       "id": 1,
@@ -223,7 +220,6 @@
       "unit": "μg"
     }
   ],
-
   "devices": [
     {
       "id": 1,
@@ -231,7 +227,11 @@
       "deviceCode": "DEV-001",
       "deviceName": "TempSense Pro 300",
       "type": "Temperature",
-      "sensors": ["Temperature", "Humidity", "AQI"],
+      "sensors": [
+        "Temperature",
+        "Humidity",
+        "AQI"
+      ],
       "min": "15 °C",
       "max": "26 °C",
       "status": "Active"
@@ -242,7 +242,11 @@
       "deviceCode": "DEV-002",
       "deviceName": "AirWatch X200",
       "type": "AQI",
-      "sensors": ["CO2", "PM25", "VOC"],
+      "sensors": [
+        "CO2",
+        "PM25",
+        "VOC"
+      ],
       "min": "0 ppm",
       "max": "800 ppm",
       "status": "Active"
@@ -253,7 +257,11 @@
       "deviceCode": "DEV-005",
       "deviceName": "AirWatch X100",
       "type": "AQI",
-      "sensors": ["CO2", "VOC", "PM25"],
+      "sensors": [
+        "CO2",
+        "VOC",
+        "PM25"
+      ],
       "min": "0 ppm",
       "max": "600 ppm",
       "status": "Active"
@@ -264,7 +272,11 @@
       "deviceCode": "DEV-007",
       "deviceName": "CryoSense Pro",
       "type": "Temperature",
-      "sensors": ["Temperature", "Humidity", "Pressure"],
+      "sensors": [
+        "Temperature",
+        "Humidity",
+        "Pressure"
+      ],
       "min": "-25 °C",
       "max": "-10 °C",
       "status": "Active"
@@ -275,13 +287,16 @@
       "deviceCode": "DEV-009",
       "deviceName": "TempSense Rack",
       "type": "Temperature",
-      "sensors": ["Temperature", "Humidity", "Heat Index"],
+      "sensors": [
+        "Temperature",
+        "Humidity",
+        "Heat Index"
+      ],
       "min": "16 °C",
       "max": "24 °C",
       "status": "Active"
     }
   ],
-
   "alerts": [
     {
       "id": 1,
@@ -306,7 +321,6 @@
       "createdAt": "2026-03-05T09:30:00Z"
     }
   ],
-
   "sensors": [
     {
       "id": 1,
@@ -369,46 +383,82 @@
       ]
     }
   ],
-
-  "sensorType" :[
-    {"id":1,
-      "name":"Lux"},
-    {"id":2,
-      "name":"Temperature"},
-    {"id":3,
-      "name":"Humidity"},
-    {"id":4,
-      "name":"TDS"},
-    {"id":5,
-      "name":"PH"},
-    {"id":6,
-      "name":"COD"},
-    {"id":7,
-      "name":"Noise"},
-    {"id":8,
-      "name":"PM10"},
-    {"id":9,
-      "name":"TSP"},
-    {"id":10,
-      "name":"CO"},
-    {"id":11,
-      "name":"NO2"},
-    {"id":12,
-      "name":"O3"},
-    {"id":13,
-      "name":"O2"},
-    {"id":14,
-      "name":"CH4"},
-    {"id":15,
-      "name":"H2"},
-    {"id":16,
-      "name":"H2S"},
-    {"id":17,
-      "name":"NH3"},
-    {"id":18,
-      "name":"TVOC"},
-    {"id":19,
-      "name":"CO2"}
-]
-
+  "sensorType": [
+    {
+      "id": 1,
+      "name": "Lux"
+    },
+    {
+      "id": 2,
+      "name": "Temperature"
+    },
+    {
+      "id": 3,
+      "name": "Humidity"
+    },
+    {
+      "id": 4,
+      "name": "TDS"
+    },
+    {
+      "id": 5,
+      "name": "PH"
+    },
+    {
+      "id": 6,
+      "name": "COD"
+    },
+    {
+      "id": 7,
+      "name": "Noise"
+    },
+    {
+      "id": 8,
+      "name": "PM10"
+    },
+    {
+      "id": 9,
+      "name": "TSP"
+    },
+    {
+      "id": 10,
+      "name": "CO"
+    },
+    {
+      "id": 11,
+      "name": "NO2"
+    },
+    {
+      "id": 12,
+      "name": "O3"
+    },
+    {
+      "id": 13,
+      "name": "O2"
+    },
+    {
+      "id": 14,
+      "name": "CH4"
+    },
+    {
+      "id": 15,
+      "name": "H2"
+    },
+    {
+      "id": 16,
+      "name": "H2S"
+    },
+    {
+      "id": 17,
+      "name": "NH3"
+    },
+    {
+      "id": 18,
+      "name": "TVOC"
+    },
+    {
+      "id": 19,
+      "name": "CO2"
+    }
+  ]
 }

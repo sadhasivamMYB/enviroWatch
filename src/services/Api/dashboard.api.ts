@@ -7,8 +7,8 @@ export const dashboardApi = createApi({
     endpoints: (builder) => (
 
         {
-            getDashboardSummary: builder.query<any, void>({
-                query: () => "/dashboard/summary",
+            getDashboard: builder.query<any, void>({
+                query: () => "/dashboard",
             }),
 
             getDashboardLocationHealth: builder.query<any, void>({
@@ -35,7 +35,7 @@ export const dashboardApi = createApi({
 })
 
 export const {
-    useGetDashboardSummaryQuery,
+    useGetDashboardQuery,
     useGetDashboardLocationHealthQuery,
     useGetDashboardDeviceHealthQuery,
     useGetDashboardAlertSummaryQuery,

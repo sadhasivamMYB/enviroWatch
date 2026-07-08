@@ -4,6 +4,7 @@ import {
     TextField,
     MenuItem,
     Button,
+    CircularProgress,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ThermostatIcon from "@mui/icons-material/Thermostat";
@@ -149,9 +150,9 @@ const AlertOverview = () => {
     const [filteredAlerts, setFilteredAlerts] = useState([])
 
     const { data: activeAlerts, isLoading, isError } = useGetActiveAlertsQuery()
-    const { data: locations, isLoading: locationsLoading, isError: locationsError } = useGetLocationsQuery()
+    const { data: locations, isLoading: locationsLoading, isError: locationsError } = useGetLocationsQuery({ limit: null, offset: null })
 
-    console.log(activeAlerts, "activeAlerts")
+    console.log(locations, "activeAlerts")
 
     const filterData = (data) => {
         return data.filter((item) => {
@@ -205,8 +206,8 @@ const AlertOverview = () => {
                 >
                     <MenuItem value="All" sx={{ fontSize: "12px" }}>All</MenuItem>
                     {
-                        locations?.map((location: any) => (
-                            <MenuItem key={location.id} value={location.name} sx={{ fontSize: "12px" }}>{location.name}</MenuItem>
+                        locations?.locations?.map((location: any) => (
+                            <MenuItem key={location.id} value={location.id} sx={{ fontSize: "12px" }}>{location.name}</MenuItem>
                         ))
                     }
 
@@ -275,7 +276,11 @@ const AlertOverview = () => {
 
                 {/* ALERT LIST */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    {filteredAlerts?.length == 0 ? (
+                    {isLoading ? (
+                        <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+                            <CircularProgress size={32} sx={{ color: "#0d9488" }} />
+                        </Box>
+                    ) : filteredAlerts?.length == 0 ? (
                         <Typography sx={{ fontSize: 14, fontWeight: 500, textAlign: "center", mt: 2, color: "#787878ff" }}>No alerts found</Typography>
                     ) : (
                         filteredAlerts?.map((item: any, i: number) => (

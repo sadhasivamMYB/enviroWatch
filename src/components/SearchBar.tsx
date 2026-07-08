@@ -3,6 +3,7 @@ import { Box, TextField, InputAdornment } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 import React from "react";
 
+
 interface SearchBarProps {
     /** Placeholder text displayed in the input field */
     placeholder?: string;

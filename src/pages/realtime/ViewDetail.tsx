@@ -24,95 +24,13 @@ import { useParams } from 'react-router-dom';
 import WbSunnyOutlinedIcon from '@mui/icons-material/WbSunnyOutlined';
 import GraphicEqOutlinedIcon from '@mui/icons-material/GraphicEqOutlined';
 import Back from '../../components/Back';
+import { useGetDashboardQuery } from '../../services/Api/dashboard.api';
+import { useEffect, useMemo, useState } from 'react';
+import { getSensorConfig } from '../../utils/IconMapping';
+import { FactoryIcon } from 'lucide-react';
 // -- if sidebar needed then Fetch data from location API
 
-const topStats = {
-    temperature: {
 
-        icon: <ThermostatOutlined />,
-        bg: `
-        linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(207, 159, 2, 0.08)) padding-box, 
-        linear-gradient(#fff, #fff) padding-box, 
-        linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(207, 159, 2, 0.1)) border-box`,
-        iconBg: '#fff7d6',
-        iconColor: '#CF9F02',
-        unit: "°C"
-    },
-    humidity: {
-        icon: <WaterDropOutlined />,
-        bg: `
-        linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(0, 163, 149, 0.12)) padding-box, 
-        linear-gradient(#fff, #fff) padding-box, 
-        linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(0, 163, 149, 0.1)) border-box`,
-        iconBg: ' #e6fbf8',
-        iconColor: '#00A395',
-        unit: "%"
-    },
-    aqi: {
-        icon: <AirOutlined />,
-        bg: `
-    linear-gradient(
-      115.04deg,
-      rgba(217, 217, 217, 0.01),
-      rgba(3, 153, 0, 0.08)
-    ) padding-box,
-
-    linear-gradient(#fff, #fff) padding-box,
-
-    linear-gradient(
-      -64.53deg,
-      rgba(11, 11, 15, 0.01),
-      rgba(3, 153, 0, 0.1)
-    ) border-box
-  `,
-        iconBg: '#e6f6e6 ',
-        iconColor: '#039900',
-        unit: "%"
-    },
-};
-
-const smallStats = [
-    {
-        title: 'Lux',
-        value: '500',
-        unit: 'LX',
-        icon: WbSunnyOutlinedIcon,
-        iconBg: '#FFF2E4',
-        iconColor: '#FF8A00',
-    },
-    {
-        title: 'TDS',
-        value: '500',
-        unit: 'MG/L',
-        icon: Grain,
-        iconBg: '#f3f0ff',
-        iconColor: '#7A5AF8',
-    },
-    {
-        title: 'PH',
-        value: '52%',
-        unit: '',
-        icon: OpacityOutlined,
-        iconBg: '#FCE7F3',
-        iconColor: '#DB2777',
-    },
-    {
-        title: 'COD',
-        value: '80',
-        unit: 'MG/L',
-        icon: WaterDropOutlined,
-        iconBg: '#E8F3D8',
-        iconColor: '#6B8E23',
-    },
-    {
-        title: 'Noise',
-        value: '95',
-        unit: 'dBA',
-        icon: GraphicEqOutlinedIcon,
-        iconBg: '#EFEFEF',
-        iconColor: '#5B5B66',
-    },
-];
 
 const airQualityData = [
     { label: 'PM2.5', value: '30', unit: 'μg/m³' },
@@ -150,28 +68,37 @@ const StatusChip = ({ label }: any) => (
 const InfoCard = ({
     value,
     label,
+    unit,
 }: {
     value: string | number;
     label: string;
+    unit?: string;
 }) => {
     const key = String(label).toLowerCase();
-    const cfg = topStats[key];
+    const { icon: Icon, iconBg, iconColor } = getSensorConfig(key);
+
+    const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
+    };
+
+    const rgb = hexToRgb(iconColor);
+    const bg = `
+        linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(${rgb}, 0.12)) padding-box, 
+        linear-gradient(#fff, #fff) padding-box, 
+        linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(${rgb}, 0.1)) border-box`;
 
     return (
         <Box
             sx={{
                 p: 2,
                 borderRadius: "16px",
-
-                background: cfg?.bg,
+                background: bg,
                 border: "1px solid transparent",
-
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-
                 minHeight: 92,
-
                 boxSizing: "border-box",
             }}
         >
@@ -188,24 +115,19 @@ const InfoCard = ({
                     sx={{
                         width: 52,
                         height: 52,
-
                         borderRadius: "14px",
-
-                        background: cfg?.iconBg,
-                        color: cfg?.iconColor,
-
+                        background: iconBg,
+                        color: iconColor,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-
                         border: "1px solid rgba(255,255,255,0.6)",
-
                         "& svg": {
                             fontSize: 26,
                         },
                     }}
                 >
-                    {cfg?.icon}
+                    {Icon && <Icon />}
                 </Box>
 
                 {/* Text */}
@@ -217,6 +139,7 @@ const InfoCard = ({
                             fontWeight: 500,
                             lineHeight: 1.2,
                             mb: 0.4,
+                            textTransform: "capitalize",
                         }}
                     >
                         {label}
@@ -230,8 +153,8 @@ const InfoCard = ({
                             lineHeight: 1,
                         }}
                     >
-                        {value}{cfg?.unit}
-                        {/* <Typography
+                        {value}
+                        <Typography
                             component="span"
                             sx={{
                                 fontSize: "0.9rem",
@@ -240,8 +163,8 @@ const InfoCard = ({
                                 ml: 0.4,
                             }}
                         >
-                            
-                        </Typography> */}
+                            {unit}
+                        </Typography>
                     </Typography>
                 </Box>
             </Box>
@@ -252,9 +175,8 @@ const InfoCard = ({
     );
 };
 
-const SmallStatCard = ({ item }: any) => {
-
-    const Icon = item.icon;
+const SmallStatCard = ({ metric }: { metric: any }) => {
+    const { icon: Icon, iconBg, iconColor } = getSensorConfig(metric.metric_key);
 
     return (
         <Grid size={{
@@ -263,10 +185,8 @@ const SmallStatCard = ({ item }: any) => {
             md: 2.4
         }}>
             <Box
-
                 sx={{
                     p: 2.5,
-
                     borderRight: '1px solid #ECECEC',
                     height: '100%',
                 }}
@@ -284,8 +204,8 @@ const SmallStatCard = ({ item }: any) => {
                                 width: 10,
                                 height: 10,
                                 borderRadius: '8px',
-                                backgroundColor: item.iconBg,
-                                color: item.iconColor,
+                                backgroundColor: iconBg,
+                                color: iconColor,
                                 display: 'flex',
                                 fontSize: 25,
                                 padding: 1,
@@ -293,14 +213,14 @@ const SmallStatCard = ({ item }: any) => {
                                 justifyContent: 'center',
                             }}
                         >
-                            <Icon sx={{ fontSize: 16 }} />
+                            {Icon && <Icon sx={{ fontSize: 16 }} />}
                         </Box>
 
                         <Box>
                             <Typography sx={{
-                                fontWeight: 500, fontSize: 12, color: "#666"
+                                fontWeight: 500, fontSize: 12, color: "#666", textTransform: 'capitalize'
                             }}>
-                                {item.title}
+                                {metric.metric_name || metric.metric_key}
                             </Typography>
                             <Box sx={{
                                 display: "flex", flexDirection: "row", gap: 0.5, alignItems: "baseline"
@@ -308,13 +228,13 @@ const SmallStatCard = ({ item }: any) => {
                                 <Typography sx={{
                                     fontSize: 18, fontWeight: 700
                                 }}>
-                                    {item.value}
+                                    {metric.latest_value || 0}
                                 </Typography>
                                 <Typography sx={{
                                     color: "#888",
                                     fontSize: 10
                                 }}>
-                                    {item.unit}
+                                    {metric.unit || ''}
                                 </Typography>
                             </Box>
                         </Box>
@@ -330,8 +250,72 @@ const SmallStatCard = ({ item }: any) => {
 export default function ViewDetail() {
 
     const params = useParams()
-    const data = []
-    console.log(data, "data")
+    const id = params?.id
+    const [data, setData] = useState<any>()
+
+
+    const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardQuery()
+    const locationData = dashboardData?.locations || []
+
+
+    const getLocationData = () => {
+        const data = locationData.find((item: any) => item.location_id == id)
+        setData(data)
+    }
+    useEffect(() => {
+        getLocationData()
+    }, [locationData])
+
+    console.log(data, "data ✨✨✨🙌🩺🩺🩺")
+
+
+    // count active devices 
+
+    const activeCounts = useMemo<{ onlineDevices: number, offlineDevices: number }>(() => {
+        if (!data) return { onlineDevices: 0, offlineDevices: 0 }
+        const devices = data?.devices || []
+        const onlineDevices = devices.filter((device: any) => device.status == "online")
+        const offlineDevices = devices.filter((device: any) => device.status == "offline")
+        return { onlineDevices: onlineDevices.length, offlineDevices: offlineDevices.length }
+    }, [data, locationData])
+
+    console.log(activeCounts, "activeCounts")
+
+
+    // filter metrics
+    const validMetrics = useMemo(() => {
+        if (!data?.devices) return [];
+
+        let allMetrics: any[] = [];
+        data.devices.forEach((device: any) => {
+            if (!device.metrics) return;
+
+            if (device.device_type === "temperature") {
+                // Add all metrics from the temperature device
+                device.metrics.forEach((m: any) => {
+                    if (!allMetrics.find(existing => existing.metric_key === m.metric_key)) {
+                        allMetrics.push(m);
+                    }
+                });
+            } else {
+                // Ignore temperature metric from non-temperature devices
+                const filteredMetrics = device.metrics.filter((m: any) => !m.metric_key.toLowerCase().includes("temperature"));
+                filteredMetrics.forEach((fm: any) => {
+                    if (!allMetrics.find(existing => existing.metric_key === fm.metric_key)) {
+                        allMetrics.push(fm);
+                    }
+                });
+            }
+        });
+        return allMetrics;
+    }, [data]);
+
+
+    console.log(validMetrics, "validMetrics, 🔃🔃🎊⏱️⏱️✨✨")
+
+    const topMetrics = validMetrics.slice(0, 3);
+    const smallMetrics = validMetrics.slice(3);
+
 
 
     return (
@@ -471,7 +455,7 @@ export default function ViewDetail() {
                                     fontSize: 32,
                                 }}
                             >
-                                {data?.icon || <InfoOutlined />}
+                                <FactoryIcon />
                             </Box>
 
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.6 }}>
@@ -481,7 +465,7 @@ export default function ViewDetail() {
                                         fontWeight: 600,
 
                                     }}>
-                                        {data?.name || "Johnson & Johnson"}
+                                        {data?.location_name || "Johnson & Johnson"}
                                     </Typography>
 
                                     <Chip label={data?.status || "active"}
@@ -532,7 +516,7 @@ export default function ViewDetail() {
                                             textAlign: "center",
                                         }}
                                     >
-                                        {data?.totalDevices || 10} Devices
+                                        {activeCounts.offlineDevices + activeCounts.onlineDevices || 0} Devices
                                     </Typography>
 
                                     <Divider
@@ -549,7 +533,7 @@ export default function ViewDetail() {
 
                                         }}
                                     >
-                                        {data?.activeDevices || 9} Active
+                                        {activeCounts.onlineDevices || 0} Active
                                     </Typography>
 
                                     <Divider
@@ -566,7 +550,7 @@ export default function ViewDetail() {
 
                                         }}
                                     >
-                                        {data?.inactiveDevices || 1} Inactive
+                                        {activeCounts.offlineDevices || 0} Inactive
                                     </Typography>
                                 </Box>
 
@@ -584,64 +568,43 @@ export default function ViewDetail() {
                 </Paper>
 
                 {/* Top Cards */}
-                <Grid
-                    container
-                    spacing={2}
-                >
-                    <Grid
-                        size={{
-                            xs: 12,
-                            md: 4,
-                        }}
-                    >
-                        <InfoCard
-                            value={data?.temperature}
-                            label="Temperature"
-                        />
-                    </Grid>
-
-                    <Grid
-                        size={{
-                            xs: 12,
-                            md: 4,
-                        }}
-                    >
-                        <InfoCard
-                            value={data?.humidity}
-                            label="Humidity"
-                        />
-                    </Grid>
-
-                    <Grid
-                        size={{
-                            xs: 12,
-                            md: 4,
-                        }}
-                    >
-                        <InfoCard
-                            value={data?.aqi}
-                            label="Aqi"
-                        />
-                    </Grid>
-                </Grid>
-
-                {/* Small Stats */}
-                <Paper
-                    elevation={0}
-                    sx={{
-
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        border: '1px solid #ECECEC',
-
-                    }}
-                >
-                    <Grid container>
-                        {smallStats.map((item) => (
-                            <SmallStatCard key={item.title} item={item} />
+                {topMetrics.length > 0 && (
+                    <Grid container spacing={2}>
+                        {topMetrics.map((metric: any, index: number) => (
+                            <Grid
+                                key={index}
+                                size={{
+                                    xs: 12,
+                                    md: 4,
+                                }}
+                            >
+                                <InfoCard
+                                    value={metric.latest_value || 0}
+                                    label={metric.metric_name || metric.metric_key}
+                                    unit={metric.unit || ''}
+                                />
+                            </Grid>
                         ))}
                     </Grid>
-                </Paper>
+                )}
+
+                {/* Small Stats */}
+                {smallMetrics.length > 0 && (
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            borderRadius: '16px',
+                            overflow: 'hidden',
+                            border: '1px solid #ECECEC',
+                        }}
+                    >
+                        <Grid container>
+                            {smallMetrics.map((metric: any, index: number) => (
+                                <SmallStatCard key={index} metric={metric} />
+                            ))}
+                        </Grid>
+                    </Paper>
+                )}
 
                 {/* Air Quality Section */}
                 <Paper

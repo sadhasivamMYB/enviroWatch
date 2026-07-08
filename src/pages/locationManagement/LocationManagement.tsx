@@ -11,10 +11,12 @@ import {
     TableHead,
     TableRow,
     Typography,
+    CircularProgress,
 } from "@mui/material";
 import { Add, Delete, Edit } from "@mui/icons-material";
 import LocationFormModal from "./LocationForm";
 import { useAddLocationMutation, useDeleteLocationMutation, useGetLocationsQuery, useUpdateLocationMutation } from "../../services/Api/location.api";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import SearchBar from "../../components/SearchBar";
 import PageTitle from "../../components/Pagetitle";
 import CommonPagination from "../../components/Pagination";
@@ -30,6 +32,8 @@ const LocationManagement: React.FC = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(6);
 
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
 
     const { data: locationInfo, isLoading } = useGetLocationsQuery({ limit: rowsPerPage, offset: page })
 
@@ -41,18 +45,11 @@ const LocationManagement: React.FC = () => {
 
 
 
-    useEffect(() => {
-
-        console.log("rowsPerPage", rowsPerPage, page)
-
-    }, [rowsPerPage])
-
-
     const [addLocation, { isLoading: isAddLoading }] = useAddLocationMutation()
 
-    const [updateLocation] = useUpdateLocationMutation()
+    const [updateLocation, { isLoading: isUpdateLoading }] = useUpdateLocationMutation()
 
-    const [deleteLcoation] = useDeleteLocationMutation()
+    const [deleteLcoation, { isLoading: isDeleteLoading }] = useDeleteLocationMutation()
 
     const filteredRows = useMemo(() => {
         return locationInfoData?.filter(
@@ -62,9 +59,9 @@ const LocationManagement: React.FC = () => {
         );
     }, [search, locationInfoData]);
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
+    // if (isLoading) {
+    //     return <div>Loading...</div>;
+    // }
 
     const handleSubmit = async (data: any) => {
         console.log("handleSubmit", data);
@@ -103,15 +100,19 @@ const LocationManagement: React.FC = () => {
 
     }
 
-    const handleDeleteLocation = async (e: any) => {
+    const handleDeleteLocation = (e: any) => {
+        setLocationToDelete(e?.id);
+        setDeleteDialogOpen(true);
+    }
 
-        let location_id = e?.id
-
+    const confirmDeleteLocation = async () => {
+        if (!locationToDelete) return;
         try {
-            await deleteLcoation(location_id)
-        }
-        catch (err) {
-            console.log(err)
+            await deleteLcoation(locationToDelete).unwrap();
+            setDeleteDialogOpen(false);
+            setLocationToDelete(null);
+        } catch (err) {
+            console.log(err);
         }
     }
 
@@ -247,7 +248,13 @@ const LocationManagement: React.FC = () => {
                             </TableHead>
 
                             <TableBody>
-                                {filteredRows?.length === 0 ? (
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                            <CircularProgress size={32} sx={{ color: "#0d9488" }} />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredRows?.length === 0 ? (
                                     <TableRow>
                                         <TableCell
                                             colSpan={6}
@@ -425,8 +432,22 @@ const LocationManagement: React.FC = () => {
                     onsubmit={editOpen ? handleEditLocationSubmit : handleSubmit}
                     isEdit={editOpen}
                     initialValues={editOpen ? isEditValue : null}
+                    isLoading={editOpen ? isUpdateLoading : isAddLoading}
                 />
             )}
+
+            <ConfirmDialog
+                open={deleteDialogOpen}
+                title="Delete Location"
+                message="Are you sure you want to delete this location? This action cannot be undone."
+                onConfirm={confirmDeleteLocation}
+                onCancel={() => {
+                    setDeleteDialogOpen(false);
+                    setLocationToDelete(null);
+                }}
+                isLoading={isDeleteLoading}
+            />
+
         </Box >
     );
 };

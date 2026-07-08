@@ -27,7 +27,7 @@ export type StatusTag = "normal" | "warning" | "alert";
 
 type data = {
     id: string,
-    name: string;
+    location_name: string;
     description: string;
     status: string;
     temperature: number;
@@ -41,7 +41,7 @@ type data = {
 }
 
 export interface FacilityCardProps {
-    data: data,
+    data: data, status: any,
     onViewDetails?: (id: string) => any;
 }
 
@@ -116,7 +116,8 @@ const MetricIcon: React.FC<{ type: string }> = ({
 const MetricTile: React.FC<{
     metric: number;
     type: string;
-}> = ({ metric, type }) => {
+    unit: string
+}> = ({ metric, type, unit }) => {
 
     const labelColors = {
         temperature: "#b38600",
@@ -124,11 +125,11 @@ const MetricTile: React.FC<{
         aqi: "#039900",
     };
 
-    const unit = {
-        temperature: "°C",
-        humidity: "%",
-        aqi: "Good"
-    }
+    // const unit = {
+    //     temperature: "°C",
+    //     humidity: "%",
+    //     aqi: "Good"
+    // }
 
     return (
         <Box
@@ -152,7 +153,7 @@ const MetricTile: React.FC<{
                     sx={{ fontSize: "14px", fontWeight: 600, color: "#000", }}
                 >
                     {metric}
-                    <span style={{ marginLeft: "1px" }}>{unit[type]}</span>
+                    <span style={{ marginLeft: "1px" }}>{unit}</span>
                 </Typography>
 
             </Box>
@@ -169,7 +170,8 @@ const MetricTile: React.FC<{
 
 // ─── Main Component
 
-export const FacilityCard: React.FC<FacilityCardProps> = ({
+// export const FacilityCard: React.FC<FacilityCardProps> = ({
+export const FacilityCard: React.FC<any> = ({
     data,
     onViewDetails
 }) => {
@@ -178,26 +180,33 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
     console.log(data, "🔃🔃🔃")
     // const navigate = useNavigate();
 
+    const tempValue = data.devices.find((e: any) => e.device_type == "temperature")
+    const tempMetricValue = tempValue?.metrics?.find((e: any) => e.metric_key == "temperature")
+
+
 
     const {
-        id,
-        name,
+        location_name: name,
         description,
         status,
-        temperature,
-        humidity,
-        aqi,
         totalDevices,
         activeDevices,
-        inactiveDevices,
-        icon } = data
+        inactiveDevices } = data
 
-    const cfg = STATUS_CONFIG[status];
+    const cfg = STATUS_CONFIG[status?.length > 0 ? 'alert' : "normal"];
     const handleb = () => {
         console.log("From Facility Card...",)
-        onViewDetails(id);
+        console.log(data, "🔃🔃🔃")
+        onViewDetails(data?.location_id);
 
     }
+
+    const deviceMetrics = data?.devices?.flatMap((d: any) => d?.metrics) || [];
+    const filter = deviceMetrics?.filter?.((e: any) => e.metric_key !== "temperature")
+
+    console.log(filter, "filter")
+
+
     return (
         <Card
             elevation={0}
@@ -293,9 +302,12 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
 
                     {/* Metrics Row */}
                     <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
-                        <MetricTile metric={temperature} type="temperature" />
-                        <MetricTile metric={humidity} type="humidity" />
-                        <MetricTile metric={aqi} type="aqi" />
+                        <MetricTile metric={tempMetricValue?.latest_value || 0} type={tempMetricValue?.display_name} unit={tempMetricValue?.unit || ""} />
+                        {
+                            filter?.slice(0, 2).map((item: any, j: number) => (
+                                <MetricTile metric={item.latest_value || 0} type={item.display_name} unit={item.unit || ""} />
+                            ))
+                        }
                     </Box>
 
                 </Box>
@@ -330,7 +342,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
 
                         component="button"
                         // onClick={() => navigate("/view-detail/90")}
-                        onClick={() => handleb()}
+                        onClick={handleb}
                         underline="none"
                         sx={{
                             padding: 1,

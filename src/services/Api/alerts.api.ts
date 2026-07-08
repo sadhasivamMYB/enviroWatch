@@ -19,15 +19,16 @@ export const alertsApi = createApi({
             providesTags: ["alerts"]
         }),
 
+        // GET - Active Alert Rule
         getActiveAlerts: builder.query<any, void>({
-            query: () => "/alerts/active-alerts",
+            query: () => "/alerts/active",
             providesTags: ["alerts"]
         }),
 
         // POST - ADD Alert Rule
         addAlertRule: builder.mutation<any, any>({
             query: (body) => ({
-                url: "/alerts/alert-rules",
+                url: "/alert-rules",
                 method: "POST",
                 body,
             }),
@@ -36,7 +37,7 @@ export const alertsApi = createApi({
 
         updateAlertRule: builder.mutation<any, any>({
             query: ({ id, body }) => ({
-                url: `/alerts/alert-rules/${id}`,
+                url: `/alert-rules/${id}`,
                 method: "PUT",
                 body,
             }),
