@@ -8,6 +8,12 @@ export default function CommonPagination({
     rowsPerPage,
     setRowsPerPage,
     setPage
+}: {
+    page: number;
+    total_items: number;
+    rowsPerPage: number;
+    setRowsPerPage: (value: any) => void;
+    setPage: (value: any) => void;
 }) {
     return (
         <Stack spacing={2} sx={{
@@ -91,7 +97,7 @@ export default function CommonPagination({
                     >
                         <IconButton
                             onClick={() =>
-                                setPage((prev) => Math.max(prev - 1, 0))
+                                setPage((prev: number) => Math.max(prev - 1, 0))
                             }
                         >
                             <KeyboardArrowLeftIcon />
@@ -100,9 +106,8 @@ export default function CommonPagination({
                         <Divider orientation="vertical" flexItem />
                         <IconButton
                             onClick={() =>
-                                setPage((prev) =>
-                                    prev + 1 <
-                                        Math.ceil(total_items / rowsPerPage)
+                                setPage((prev: number) =>
+                                    prev + 1 < Math.ceil(total_items / rowsPerPage)
                                         ? prev + 1
                                         : prev
                                 )

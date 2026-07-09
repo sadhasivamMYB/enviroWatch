@@ -1,12 +1,10 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { LineChart } from "@mui/x-charts";
-import { useState } from "react";
-
-
 
 
 const ParameterWise = ({ parameterTempData }: any) => {
-    const [metric, setMetric] = useState(0);
+    // const [metric, setMetric] = useState(0);
+    const metric = 0
 
     const day = Array.from({ length: 12 }, (_, i) => {
         const date = new Date();
@@ -17,14 +15,13 @@ const ParameterWise = ({ parameterTempData }: any) => {
     });
     const location = ['Warehouse A', 'Warehouse B', 'Warehouse C']
 
-    const [selectedSenor, setSelectedSensor] = useState("Temperture")
     const colors = ["#ef4444", "#3b82f6", "#f59e0b"];
     const yMax = metric === 0 ? 1000 : 100;
-    const data = metric === 0 ? parameterTempData : parameterTempData.map((d) => d.map((v) => Math.round(v / 11)));
+    const data = metric === 0 ? parameterTempData : parameterTempData.map((d: any) => d.map((v: any) => Math.round(v / 11)));
     return (
         <Box sx={{ border: "1px solid rgba(11, 11, 15, 0.06)", borderRadius: "16px", padding: 2, mt: "16px" }}>
 
-            <Typography sx={{ fontSize: "16px", fontWeight: 500, textTransform: "capitalize" }}>{selectedSenor}</Typography>
+            <Typography sx={{ fontSize: "16px", fontWeight: 500, textTransform: "capitalize" }}>Temperture</Typography>
             <LineChart
 
                 height={500}

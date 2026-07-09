@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     Box,
     Typography,
@@ -19,7 +19,7 @@ import {
     Delete
 } from "@mui/icons-material";
 
-import DeviceManagementForm, { sensorsList } from "./DeviceForm";
+import DeviceManagementForm from "./DeviceForm";
 import { useGetLocationIdDevicesQuery, useGetLocationsQuery } from "../../services/Api/location.api";
 import { useAddDeviceMutation, useDeleteDeviceMutation, useUpdateDeviceMutation } from "../../services/Api/device.api";
 import PageTitle from "../../components/Pagetitle";
@@ -49,17 +49,15 @@ export default function AlertManagement() {
     const [rowsPerPage, setRowsPerPage] = useState(6);
 
 
-    const { data: locationData } = useGetLocationsQuery({ limit: null, offset: null });
+    const { data: locationData } = useGetLocationsQuery({});
 
     const LocationData = locationData?.locations
-
-    console.log(LocationData, "😎😎😎")
-
-    const [addDevice, { isLoading: isAddLoading }] = useAddDeviceMutation();
-    const [updateDevice, { error: updateError, isLoading: isUpdateLoading }] = useUpdateDeviceMutation()
+    const [addDevice] = useAddDeviceMutation();
+    const [updateDevice, { error: updateError }] = useUpdateDeviceMutation()
 
     const [deleteDevice] = useDeleteDeviceMutation()
 
+    console.log(sensorFilter)
     const selectedLocationId =
         activeLocation ??
         (locationData?.locations?.[0]?.id
@@ -81,7 +79,7 @@ export default function AlertManagement() {
 
     const [open, setOpen] = useState(false);
 
-    const filtered = locationDevices?.devices?.filter((r) => {
+    const filtered = locationDevices?.devices?.filter((r: any) => {
         const matchesSearch =
             search === "" || r.name.toLowerCase().includes(search.toLowerCase())
         // r.sensors.some((sensor) => sensor.toLowerCase().includes(search.toLowerCase()));
@@ -104,8 +102,7 @@ export default function AlertManagement() {
         }
     };
 
-    const handleEdit = (row) => {
-        console.log(row)
+    const handleEdit = (row: any) => {
         setIsEdit(true)
         setSelectedRow(row)
         setOpen(true)
@@ -267,7 +264,7 @@ export default function AlertManagement() {
                                         </TableRow>
 
 
-                                        : filtered?.map((row, idx) => (
+                                        : filtered?.map((row: any, idx: number) => (
                                             <TableRow
                                                 key={row.id}
                                                 sx={{
@@ -388,7 +385,14 @@ export default function AlertManagement() {
 }
 
 
-const LocationSideBar = ({ LocationData, activeLocation, setActiveLocation, setSearch, setSensorFilter, setStatusFilter }) => {
+const LocationSideBar = ({ LocationData, activeLocation, setActiveLocation, setSearch, setSensorFilter, setStatusFilter }: {
+    LocationData: any,
+    activeLocation: any,
+    setActiveLocation: any,
+    setSearch: any,
+    setSensorFilter: any,
+    setStatusFilter: any
+}) => {
     return (
         <Box
             sx={{
@@ -398,7 +402,7 @@ const LocationSideBar = ({ LocationData, activeLocation, setActiveLocation, setS
                 pr: 1,
             }}
         >
-            {LocationData?.map((loc) => {
+            {LocationData?.map((loc: any) => {
                 const isActive = loc.id === activeLocation;
                 return (
                     <Box

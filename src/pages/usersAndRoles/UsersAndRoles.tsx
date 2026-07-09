@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
     Box,
     Button,
@@ -28,12 +28,12 @@ import { useCreateUserMutation, useDeleteUserMutation, useGetUsersQuery, useUpda
 import { useGetRolesQuery } from "../../services/Api/roles.api";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
-type UserRole = {
-    id: number;
-    name: string;
-    role: string;
-    status: "Active" | "Inactive";
-};
+// type UserRole = {
+//     id: number;
+//     name: string;
+//     role: string;
+//     status: "Active" | "Inactive";
+// };
 
 
 
@@ -65,11 +65,11 @@ const UsersAndRoles: React.FC = () => {
     const { data: rolesData } = useGetRolesQuery()
 
     const filteredRows = rows?.filter(
-        (row) =>
+        (row: any) =>
             row.username.toLowerCase().includes(search.toLowerCase())
     );
 
-    async function handleAdd(fom) {
+    async function handleAdd(fom: any) {
         setIsEdit(false)
         const res = await addUser(fom)
         if (res.data) {
@@ -95,14 +95,14 @@ const UsersAndRoles: React.FC = () => {
 
     }
 
-    function roleNameFind(roleId) {
-        return rolesData?.find((role) => role.role_id === roleId)?.role_name
+    function roleNameFind(roleId: number) {
+        return rolesData?.find((role: any) => role.role_id === roleId)?.role_name
     }
 
 
     //  -- update
 
-    function handleIsEdit(user) {
+    function handleIsEdit(user: any) {
         setIsEdit(true)
         setInitialValues(user)
         setAddUserToggle(true)
@@ -114,7 +114,7 @@ const UsersAndRoles: React.FC = () => {
 
     const [deleteUser, { isLoading: isDeleteLoading }] = useDeleteUserMutation()
 
-    function handleDelete(userId) {
+    function handleDelete(userId: string) {
         setUserToDelete(userId);
         setDeleteDialogOpen(true);
     }
@@ -273,7 +273,7 @@ const UsersAndRoles: React.FC = () => {
                                         }}
                                     >No Data Found</TableCell>
                                 </TableRow>
-                                : filteredRows?.map((row) => (
+                                : filteredRows?.map((row: any) => (
                                     <TableRow
                                         key={row.id}
                                         hover

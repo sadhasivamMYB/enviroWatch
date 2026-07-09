@@ -8,21 +8,12 @@ import {
     Typography,
 } from '@mui/material';
 import {
-
-    Grain,
     Air,
     KeyboardArrowDownOutlined,
-    AirOutlined,
-    WaterDropOutlined,
-    ThermostatOutlined,
-    OpacityOutlined,
-    InfoOutlined,
 } from '@mui/icons-material';
 
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { useParams } from 'react-router-dom';
-import WbSunnyOutlinedIcon from '@mui/icons-material/WbSunnyOutlined';
-import GraphicEqOutlinedIcon from '@mui/icons-material/GraphicEqOutlined';
 import Back from '../../components/Back';
 import { useGetDashboardQuery } from '../../services/Api/dashboard.api';
 import { useEffect, useMemo, useState } from 'react';
@@ -254,7 +245,7 @@ export default function ViewDetail() {
     const [data, setData] = useState<any>()
 
 
-    const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardQuery()
+    const { data: dashboardData } = useGetDashboardQuery()
     const locationData = dashboardData?.locations || []
 
 
@@ -266,8 +257,6 @@ export default function ViewDetail() {
         getLocationData()
     }, [locationData])
 
-    console.log(data, "data ✨✨✨🙌🩺🩺🩺")
-
 
     // count active devices 
 
@@ -278,8 +267,6 @@ export default function ViewDetail() {
         const offlineDevices = devices.filter((device: any) => device.status == "offline")
         return { onlineDevices: onlineDevices.length, offlineDevices: offlineDevices.length }
     }, [data, locationData])
-
-    console.log(activeCounts, "activeCounts")
 
 
     // filter metrics
@@ -309,10 +296,6 @@ export default function ViewDetail() {
         });
         return allMetrics;
     }, [data]);
-
-
-    console.log(validMetrics, "validMetrics, 🔃🔃🎊⏱️⏱️✨✨")
-
     const topMetrics = validMetrics.slice(0, 3);
     const smallMetrics = validMetrics.slice(3);
 

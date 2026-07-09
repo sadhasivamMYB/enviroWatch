@@ -40,14 +40,14 @@ const Historical = () => {
     }
     function FilterBar({ mode }: FilterBarProps) {
         const [location, setLocation] = useState<string[]>([]);
-        const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
+        const [selectedLocation, setSelectedLocation] = useState<any>([]);
 
         const [from] = useState("30-03-2026");
         const [to] = useState("06-04-2026");
-        const [gran, setGran] = useState("Hourly");
+        // const [gran, setGran] = useState("Hourly");
         const [parameter, setParameter] = useState("Temperature");
-        const { data: locations, isLoading: locationsLoading, isError: locationsError } = useGetLocationsQuery({ limit: null, offset: null })
-        const { data: device, isLoading: deviceLoading, isError: deviceError } = useGetLocationIdDevicesQuery({ location_id: location[0] })
+        const { data: locations } = useGetLocationsQuery({})
+        const { data: device } = useGetLocationIdDevicesQuery({ location_id: location[0] })
 
         console.log(device)
         const LocationsData = locations?.locations
@@ -72,9 +72,17 @@ const Historical = () => {
                             </FormControl>
                             <FormControl sx={inputStyles}>
                                 <InputLabel>Device Name</InputLabel>
-                                <Select sx={inputStyles} value={device} label="Device Name" onChange={(e: any) => setDevice(e.target.value)}>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="TempSense Pro 3000">TempSense Pro 3000</MenuItem>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="HumiTrack X2">HumiTrack X2</MenuItem>
+                                <Select sx={inputStyles} value={device?.devices[0].id} label="Device Name">
+                                    {device?.devices?.map((item: any) => (
+                                        <MenuItem
+                                            sx={{ fontSize: "13px" }}
+                                            key={item.id}
+                                            value={item.id}
+
+                                        >
+                                            {item.name}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </>

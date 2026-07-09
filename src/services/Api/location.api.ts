@@ -1,5 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { BaseURL } from "../../env"
+import { createApi } from "@reduxjs/toolkit/query/react";
 import baseQueryWithAuth from "../../utils/AuthProtect";
 
 
@@ -46,12 +45,12 @@ export const locationApi = createApi({
       query: (args = {}) => {
         const params = new URLSearchParams();
 
-        if (args.limit !== null) {
-          params.append("limit", args.limit.toString());
+        if (args?.limit !== undefined) {
+          params.append("limit", args?.limit.toString());
         }
 
-        if (args.offset !== null) {
-          params.append("offset", args.offset.toString());
+        if (args?.offset !== undefined) {
+          params.append("offset", args?.offset.toString());
         }
 
         return {
@@ -76,6 +75,7 @@ export const locationApi = createApi({
       query: (args = {}) => {
         const params = new URLSearchParams();
 
+
         if (args.limit !== undefined) {
           params.append("limit", args.limit.toString());
         }
@@ -83,6 +83,7 @@ export const locationApi = createApi({
         if (args.offset !== undefined) {
           params.append("offset", args.offset.toString());
         }
+
         return {
           url: `/locations/${args?.location_id}/devices${params.toString() ? `?${params.toString()}` : ""}`,
           method: "GET",

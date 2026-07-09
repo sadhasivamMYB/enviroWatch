@@ -7,6 +7,7 @@ import {
     Typography,
     Link,
     Divider,
+    Toolbar,
 } from "@mui/material";
 import {
     ArrowForward,
@@ -93,22 +94,19 @@ const STATUS_CONFIG: Record<
 //     return "#ef4444";
 // };
 
-const MetricIcon: React.FC<{ type: string }> = ({
-    type,
-}) => {
-    const styles = {
-        temperature: { color: "#b38600" },
-        humidity: { color: "#00a395" },
-        aqi: { color: "#039900" },
+
+interface MetricIconProps {
+    type: string;
+}
+
+const MetricIcon = ({ type }: MetricIconProps) => {
+    const icons: Record<string, React.ReactNode> = {
+        temperature: <ThermostatOutlinedIcon />,
+        humidity: <WaterDropOutlinedIcon />,
+        aqi: <AirOutlinedIcon />,
     };
 
-    const icons = {
-        temperature: <ThermostatOutlinedIcon sx={{ ...styles.temperature, fontSize: "18px" }} />,
-        humidity: <WaterDropOutlinedIcon sx={{ ...styles.humidity, fontSize: "18px" }} />,
-        aqi: <AirOutlinedIcon sx={{ ...styles.aqi, fontSize: "18px" }} />,
-    };
-
-    return icons[type];
+    return <>{icons[type] ?? <Toolbar />}</>;;
 };
 
 // ─── Metric Card 
@@ -119,7 +117,7 @@ const MetricTile: React.FC<{
     unit: string
 }> = ({ metric, type, unit }) => {
 
-    const labelColors = {
+    const labelColors: any = {
         temperature: "#b38600",
         humidity: "#00a395",
         aqi: "#039900",
@@ -148,7 +146,7 @@ const MetricTile: React.FC<{
 
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <MetricIcon type={type} />
+                {/* <MetricIcon type={type} /> */}
                 <Typography
                     sx={{ fontSize: "14px", fontWeight: 600, color: "#000", }}
                 >
@@ -177,7 +175,6 @@ export const FacilityCard: React.FC<any> = ({
 }) => {
 
 
-    console.log(data, "🔃🔃🔃")
     // const navigate = useNavigate();
 
     const tempValue = data.devices.find((e: any) => e.device_type == "temperature")
@@ -195,8 +192,7 @@ export const FacilityCard: React.FC<any> = ({
 
     const cfg = STATUS_CONFIG[status?.length > 0 ? 'alert' : "normal"];
     const handleb = () => {
-        console.log("From Facility Card...",)
-        console.log(data, "🔃🔃🔃")
+
         onViewDetails(data?.location_id);
 
     }
@@ -304,7 +300,7 @@ export const FacilityCard: React.FC<any> = ({
                     <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
                         <MetricTile metric={tempMetricValue?.latest_value || 0} type={tempMetricValue?.display_name} unit={tempMetricValue?.unit || ""} />
                         {
-                            filter?.slice(0, 2).map((item: any, j: number) => (
+                            filter?.slice(0, 2).map((item: any) => (
                                 <MetricTile metric={item.latest_value || 0} type={item.display_name} unit={item.unit || ""} />
                             ))
                         }

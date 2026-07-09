@@ -21,7 +21,7 @@ const LoginPage = () => {
 
 
 
-    const [login, { data, error, isLoading }] = useLoginMutation();
+    const [login, { error, isLoading }] = useLoginMutation();
     const [formData, setFormData] = useState({
         username: "",
         password: ""

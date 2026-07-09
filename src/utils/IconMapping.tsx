@@ -148,5 +148,10 @@ const sensorConfig = {
     },
 };
 
-export const getSensorConfig = (metricKey) =>
-    sensorConfig[metricKey?.toLowerCase()] || defaultConfig;
+type SensorKey = keyof typeof sensorConfig;
+
+export const getSensorConfig = (metricKey: string) => {
+    const key = metricKey.toLowerCase() as SensorKey;
+
+    return sensorConfig[key] ?? defaultConfig;
+};

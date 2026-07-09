@@ -1,9 +1,9 @@
 import { NavLink } from "react-router-dom";
 import { navItems } from "../config/navConfig";
-import { iconMap } from "../config/IconMapping";
 import { Role } from "../config/roles";
 
 import { Box, Typography, Avatar } from "@mui/material";
+import { iconMap } from "../config/IconMapping";
 
 const Sidebar = () => {
     const role = Role.ADMIN;
@@ -38,8 +38,8 @@ const Sidebar = () => {
                 {/* Nav Items */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1.1, paddingRight: 2 }}>
                     {allowedNavItems
-                        .filter(item => item.roles.includes(role))
-                        .map(item => {
+                        .filter((item: any) => item.roles.includes(role))
+                        .map((item: any) => {
                             const Icon = iconMap[item.icon];
 
                             return (

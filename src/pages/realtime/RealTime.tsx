@@ -10,7 +10,6 @@ import {
 import { useState } from "react";
 import { FacilityCard } from "./FacilityCard";
 import { useNavigate } from "react-router-dom";
-import { useGetLocationsQuery } from "../../services/Api/location.api";
 import PageTitle from "../../components/Pagetitle";
 import { KeyboardArrowDownOutlined } from "@mui/icons-material";
 import { useGetDashboardQuery } from "../../services/Api/dashboard.api";
@@ -123,7 +122,7 @@ const Realtime = () => {
                     <CircularProgress size={32} sx={{ color: "#0d9488" }} />
                 </Box> : (
                     <Grid container spacing={2.5} sx={{ mt: 2 }}>
-                        {filteredCards?.map((card, i) => (
+                        {filteredCards?.map((card: any, i: number) => (
                             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
                                 <FacilityCard data={card} status={locationData?.active_alerts} onViewDetails={next_Pg} />
                             </Grid>

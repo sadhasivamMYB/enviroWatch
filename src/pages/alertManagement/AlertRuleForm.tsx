@@ -33,7 +33,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
     const [maxValue, setMaxValue] = useState<number>(26);
     const [status, setStatus] = useState("Active");
 
-    const { data: locations } = useGetLocationsQuery({ limit: null, offset: null })
+    const { data: locations } = useGetLocationsQuery({})
     const { data: devices } = useGetLocationIdDevicesQuery({ location_id: location })
     // const { data: mertics } = useGetDeviceIdByMetricsQuery({ device_id: device })
 
@@ -167,12 +167,14 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                     placeholder="Enter rule name"
                                     fullWidth
                                     sx={inputStyles}
-                                    InputProps={{
-                                        sx: {
-                                            borderRadius: "12px",
-                                            padding: "8px 14px",
-                                            fontSize: "13px",
-                                            height: "40px",
+                                    slotProps={{
+                                        input: {
+                                            sx: {
+                                                borderRadius: "12px",
+                                                padding: "8px 14px",
+                                                fontSize: "13px",
+                                                height: "40px",
+                                            }
                                         }
                                     }}
                                 />
@@ -206,7 +208,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                 <Select
                                     value={device}
                                     label="Device Name"
-                                    onChange={(e) => setDevice(e.target.value)}
+                                    onChange={(e) => setDevice(Number(e.target.value))}
                                     sx={selectStyles}
                                     disabled={isEdit}
                                 >
@@ -411,7 +413,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                         fullWidth
                                         type="number"
                                         value={minValue}
-                                        onChange={(e) => setMinValue(String(e.target.value))}
+                                        onChange={(e) => setMinValue(Number(e.target.value))}
                                         sx={{
                                             width: "60%",
                                             '& .MuiOutlinedInput-root': {
@@ -485,7 +487,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                         type="number"
 
                                         value={maxValue}
-                                        onChange={(e) => setMaxValue(String(e.target.value))}
+                                        onChange={(e) => setMaxValue(Number(e.target.value))}
                                         sx={{
                                             width: "50%",
                                             ml: 10,

@@ -3,7 +3,7 @@ import { BaseURL } from "../env";
 
 const baseQuery = fetchBaseQuery({
     baseUrl: BaseURL + "/api/v1",
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers) => {
         const token = localStorage.getItem("token");
         if (token) {
             headers.set("Authorization", `Bearer ${token}`);
@@ -13,7 +13,7 @@ const baseQuery = fetchBaseQuery({
     },
 });
 
-const baseQueryWithAuth = async (args, api, extraOptions) => {
+const baseQueryWithAuth = async (args: any, api: any, extraOptions: any) => {
     const result = await baseQuery(args, api, extraOptions);
 
     if (result.error?.status === 401) {

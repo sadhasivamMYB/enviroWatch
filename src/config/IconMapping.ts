@@ -7,7 +7,7 @@ import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined';
 import MemoryIcon from "@mui/icons-material/MemoryOutlined";
 import PeopleIcon from "@mui/icons-material/PeopleOutlined";
 
-export const iconMap = {
+export const iconMap: Record<string, React.ElementType> = {
   monitoring: InterestsOutlinedIcon,
   alerts: NotificationsActiveOutlinedIcon,
   shield: GppMaybeOutlinedIcon,
