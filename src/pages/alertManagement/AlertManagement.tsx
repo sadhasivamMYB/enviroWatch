@@ -43,7 +43,7 @@ export default function AlertManagement() {
         setPage(1);
     }, [search, activeLocation, sensorFilter, statusFilter]);
 
-    const { data: locationData } = useGetLocationsQuery({ limit: null, offset: null })
+    const { data: locationData } = useGetLocationsQuery({})
     const { data: alertData, isLoading: isAlertsLoading } = useGetAlertRulesQuery()
 
     console.log(alertData, "🔃🔃🔃🔃")
@@ -51,7 +51,7 @@ export default function AlertManagement() {
     const LocationData = locationData?.locations
 
     // const { data: DeviceData } = useGetDevicesQuery(activeLocation);
-    const [AddAlertRule, { isLoading }] = useAddAlertRuleMutation()
+    const [AddAlertRule] = useAddAlertRuleMutation()
     const [UpdateAlertRule] = useUpdateAlertRuleMutation()
 
     const activeLabel = LocationData?.find((l) => l.id === activeLocation)?.name ?? "";
@@ -140,7 +140,7 @@ export default function AlertManagement() {
             >
                 {/* Sidebar */}
                 <Sidebar
-                    LocationData={LocationData}
+                    LocationData={LocationData || []}
                     activeLocation={activeLocation}
                     setActiveLocation={setActiveLocation}
                     setSearch={setSearch}

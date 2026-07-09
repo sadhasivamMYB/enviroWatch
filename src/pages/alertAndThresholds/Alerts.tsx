@@ -149,13 +149,11 @@ const AlertOverview = () => {
     const [search, setSearch] = useState("")
     const [filteredAlerts, setFilteredAlerts] = useState([])
 
-    const { data: activeAlerts, isLoading, isError } = useGetActiveAlertsQuery()
-    const { data: locations, isLoading: locationsLoading, isError: locationsError } = useGetLocationsQuery({ limit: null, offset: null })
+    const { data: activeAlerts, isLoading } = useGetActiveAlertsQuery()
+    const { data: locations } = useGetLocationsQuery({})
 
-    console.log(locations, "activeAlerts")
-
-    const filterData = (data) => {
-        return data.filter((item) => {
+    const filterData = (data: any) => {
+        return data.filter((item: any) => {
             return item.locationId.toLowerCase().includes(search.toLowerCase()) ||
                 item.sensor.toLowerCase().includes(search.toLowerCase()) ||
                 item.threshold.toLowerCase().includes(search.toLowerCase())

@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
+import { createApi } from "@reduxjs/toolkit/query/react"
 import baseQueryWithAuth from "../../utils/AuthProtect";
 export const dashboardApi = createApi({
     reducerPath: "dashboardApi",

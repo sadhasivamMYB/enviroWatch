@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
     Box,
     Button,
@@ -418,7 +418,7 @@ const LocationManagement: React.FC = () => {
                         page={page}
                         rowsPerPage={rowsPerPage}
                         setRowsPerPage={setRowsPerPage}
-                        total_items={totalItems}
+                        total_items={Number(totalItems)}
                         setPage={setPage}
                     />
                 </Box>

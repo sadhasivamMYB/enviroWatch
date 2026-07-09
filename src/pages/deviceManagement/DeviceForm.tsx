@@ -145,7 +145,7 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
     const [status, setStatus] = useState("");
 
 
-    const { data: location } = useGetLocationsQuery({ limit: null, offset: null })
+    const { data: location } = useGetLocationsQuery({})
 
     const locations = location?.locations
 
@@ -175,7 +175,6 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
         }
     }, [initialValues, open])
 
-    console.log(selectedSensors, "💾💾💾")
 
     const DevicePayload = {
         device_uid: deviceType.slice(0, 4).toUpperCase() + "-" + deviceName.slice(0, 2).toUpperCase() + "-" + Math.floor(1000 + Math.random() * 9999),
@@ -187,15 +186,9 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
 
         ...(isEdit && { device_id: initialValues.id, is_active: status === "Active" ? true : false })
     }
-
-    console.log(DevicePayload, "🙌🙌🙌");
-
     const onhandleSave = () => {
 
         onsubmit(DevicePayload);
-
-
-
 
     }
 

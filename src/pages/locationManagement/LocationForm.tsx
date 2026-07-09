@@ -46,14 +46,6 @@ const LocationFormModal: React.FC<LocationModalProps> = ({
 
     });
 
-    const [defaultFormData] = useState({
-        name: "",
-        description: "",
-        status: "",
-        code: ""
-
-    });
-
 
     useEffect(() => {
         if (initialValues) {
