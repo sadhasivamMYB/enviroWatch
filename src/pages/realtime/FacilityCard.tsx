@@ -7,16 +7,16 @@ import {
     Typography,
     Link,
     Divider,
-    Toolbar,
+    // Toolbar,
 } from "@mui/material";
 import {
     ArrowForward,
     RoomPreferencesOutlined,
 } from "@mui/icons-material";
 
-import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
-import WaterDropOutlinedIcon from '@mui/icons-material/WaterDropOutlined';
-import AirOutlinedIcon from '@mui/icons-material/AirOutlined';
+// import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
+// import WaterDropOutlinedIcon from '@mui/icons-material/WaterDropOutlined';
+// import AirOutlinedIcon from '@mui/icons-material/AirOutlined';
 
 
 
@@ -95,19 +95,19 @@ const STATUS_CONFIG: Record<
 // };
 
 
-interface MetricIconProps {
-    type: string;
-}
+// interface MetricIconProps {
+//     type: string;
+// }
 
-const MetricIcon = ({ type }: MetricIconProps) => {
-    const icons: Record<string, React.ReactNode> = {
-        temperature: <ThermostatOutlinedIcon />,
-        humidity: <WaterDropOutlinedIcon />,
-        aqi: <AirOutlinedIcon />,
-    };
+// const MetricIcon = ({ type }: MetricIconProps) => {
+//     const icons: Record<string, React.ReactNode> = {
+//         temperature: <ThermostatOutlinedIcon />,
+//         humidity: <WaterDropOutlinedIcon />,
+//         aqi: <AirOutlinedIcon />,
+//     };
 
-    return <>{icons[type] ?? <Toolbar />}</>;;
-};
+// return <>{icons[type] ?? <Toolbar />}</>;;
+// };
 
 // ─── Metric Card 
 
