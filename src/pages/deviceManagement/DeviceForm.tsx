@@ -141,6 +141,7 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
     const [deviceName, setDeviceName] = useState('');
     const [deviceType, setDeviceType] = useState('');
     const [selectedSensors, setSelectedSensors] = useState<any[]>([]);
+    const [deviceUid, setDeviceUid] = useState('');
 
     const [status, setStatus] = useState("");
 
@@ -166,18 +167,28 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
     };
 
     useEffect(() => {
-        if (open && initialValues) {
-            setSelectedLocation(initialValues.location_id);
-            setDeviceName(initialValues.name);
-            setDeviceType(initialValues.device_type);
-            setSelectedSensors(initialValues.metrics || []);
-            setStatus(initialValues.is_active ? "Active" : "Inactive");
+        if (open) {
+            if (initialValues) {
+                setSelectedLocation(initialValues.location_id);
+                setDeviceName(initialValues.name);
+                setDeviceType(initialValues.device_type);
+                setSelectedSensors(initialValues.metrics || []);
+                setStatus(initialValues.is_active ? "Active" : "Inactive");
+                setDeviceUid(initialValues.device_uid || '');
+            } else {
+                setSelectedLocation('');
+                setDeviceName('');
+                setDeviceType('');
+                setSelectedSensors([]);
+                setStatus('');
+                setDeviceUid('');
+            }
         }
     }, [initialValues, open])
 
 
     const DevicePayload = {
-        device_uid: deviceType.slice(0, 4).toUpperCase() + "-" + deviceName.slice(0, 2).toUpperCase() + "-" + Math.floor(1000 + Math.random() * 9999),
+        device_uid: deviceUid,
         name: deviceName,
         ip_address: "0.0.0.0",
         location_id: selectedLocation,
@@ -258,6 +269,17 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
                     }}
                 >
                     <Stack spacing={3}>
+                        <Box>
+                            <Typography sx={{ fontSize: "14px", color: "#000", mb: 1 }}>Device Id</Typography>
+                            <TextField
+                                fullWidth
+                                value={deviceUid}
+                                onChange={(e) => setDeviceUid(e.target.value)}
+                                sx={inputStyles}
+                                disabled={isEdit}
+                            />
+                        </Box>
+
                         <Box>
                             <Typography sx={{ fontSize: "14px", color: "#000", mb: 1 }}>Device Name</Typography>
                             <TextField
