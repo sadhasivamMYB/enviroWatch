@@ -23,22 +23,6 @@ import { FactoryIcon } from 'lucide-react';
 
 
 
-const airQualityData = [
-    { label: 'PM2.5', value: '30', unit: 'μg/m³' },
-    { label: 'PM10', value: '30', unit: 'μg/m³' },
-    { label: 'TSP', value: '30', unit: 'μg/m³' },
-    { label: 'CO', value: '30', unit: 'ppm' },
-    { label: 'NO2', value: '45', unit: 'ppm' },
-    { label: 'SO2', value: '600', unit: 'ppm' },
-    { label: 'O3', value: '150', unit: 'ppm' },
-    { label: 'O2', value: '30', unit: '%' },
-    { label: 'CH4', value: '30', unit: '%' },
-    { label: 'H2', value: '30', unit: '%' },
-    { label: 'H2S', value: '30', unit: 'ppb' },
-    { label: 'NH3', value: '45', unit: 'μg' },
-    { label: 'TVOC', value: '600', unit: 'μg' },
-    { label: 'CO2', value: '150', unit: 'ppm' },
-];
 
 const StatusChip = ({ label }: any) => (
     <Chip
@@ -296,8 +280,20 @@ export default function ViewDetail() {
         });
         return allMetrics;
     }, [data]);
-    const topMetrics = validMetrics.slice(0, 3);
-    const smallMetrics = validMetrics.slice(3);
+    const airQualityKeys = useMemo(() => [
+        'pm2.5', 'pm25', 'pm10', 'tsp', 'co', 'no2', 'so2', 'o3', 'o2', 'ch4', 'h2', 'h2s', 'nh3', 'tvoc', 'voc', 'co2'
+    ], []);
+
+    const airQualityMetrics = useMemo(() => {
+        return validMetrics.filter(m => airQualityKeys.includes(m.metric_key.toLowerCase()));
+    }, [validMetrics, airQualityKeys]);
+
+    const nonAirQualityMetrics = useMemo(() => {
+        return validMetrics.filter(m => !airQualityKeys.includes(m.metric_key.toLowerCase()));
+    }, [validMetrics, airQualityKeys]);
+
+    const topMetrics = nonAirQualityMetrics.slice(0, 3);
+    const smallMetrics = nonAirQualityMetrics.slice(3);
 
 
 
@@ -465,12 +461,14 @@ export default function ViewDetail() {
                                         }} />
                                 </Box>
 
-                                <Typography sx={{
-                                    fontSize: "12px",
-                                    color: "#4A4A4A"
-                                }}>
-                                    {data?.description || "Located at Chennai, Tamil Nadu, India"}
-                                </Typography>
+                                {data?.description && (
+                                    <Typography sx={{
+                                        fontSize: "12px",
+                                        color: "#4A4A4A"
+                                    }}>
+                                        {data.description}
+                                    </Typography>
+                                )}
 
                                 {/* Active Stats */}
 
@@ -590,110 +588,113 @@ export default function ViewDetail() {
                 )}
 
                 {/* Air Quality Section */}
-                <Paper
-                    elevation={0}
-                    sx={{
-                        borderRadius: '16px',
-                        border: '1px solid #E8ECEA',
-                        p: 2,
-                        backgroundColor: '#fff',
-                    }}
-                >
-                    {/* Header */}
-                    <Box
+                {airQualityMetrics.length > 0 && (
+                    <Paper
+                        elevation={0}
                         sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            mb: 1,
+                            borderRadius: '16px',
+                            border: '1px solid #E8ECEA',
+                            p: 2,
+                            backgroundColor: '#fff',
                         }}
                     >
-                        <Air sx={{ color: '#35A853' }} />
-
-                        <Typography
+                        {/* Header */}
+                        <Box
                             sx={{
-                                fontSize: 12,
-
-                                color: '#4A4A4A',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                mb: 1,
                             }}
                         >
-                            Air Quality Index Details
-                        </Typography>
-                    </Box>
+                            <Air sx={{ color: '#35A853' }} />
 
-                    <Divider sx={{ mb: 2 }} />
+                            <Typography
+                                sx={{
+                                    fontSize: 12,
 
-                    {/* Grid */}
-                    <Grid
-                        container
-                        spacing={"12px"}
-
-                    >
-                        {airQualityData.map((item) => (
-                            <Grid
-                                size={{
-                                    xs: 12,
-                                    sm: 6,
-                                    md: 12 / 7,
-
+                                    color: '#4A4A4A',
                                 }}
-                                spacing={"12px"}
-                                key={item.label}
                             >
-                                <Box
-                                    sx={{
-                                        border: '1px solid #ECECEC',
-                                        borderRadius: '10px',
-                                        p: 2,
+                                Air Quality Index Details
+                            </Typography>
+                        </Box>
 
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        backgroundColor: '#fff',
+                        <Divider sx={{ mb: 2 }} />
+
+                        {/* Grid */}
+                        <Grid
+                            container
+                            spacing={"12px"}
+
+                        >
+                            {airQualityMetrics.map((item: any) => (
+                                <Grid
+                                    size={{
+                                        xs: 12,
+                                        sm: 6,
+                                        md: 12 / 7,
+
                                     }}
+                                    spacing={"12px"}
+                                    key={item.metric_key}
                                 >
-                                    <Typography
-                                        sx={{
-                                            color: '#18A136',
-                                            fontWeight: 500,
-                                            fontSize: 12,
-                                            mb: 1,
-                                        }}
-                                    >
-                                        {item.label}
-                                    </Typography>
-
                                     <Box
                                         sx={{
+                                            border: '1px solid #ECECEC',
+                                            borderRadius: '10px',
+                                            p: 2,
+
                                             display: 'flex',
-                                            alignItems: 'baseline',
-                                            gap: 0.5,
-                                            flexWrap: 'wrap',
+                                            flexDirection: 'column',
+                                            backgroundColor: '#fff',
                                         }}
                                     >
                                         <Typography
                                             sx={{
-                                                fontSize: 22,
-                                                fontWeight: 600,
-                                                lineHeight: 1,
+                                                color: '#18A136',
+                                                fontWeight: 500,
+                                                fontSize: 12,
+                                                mb: 1,
+                                                textTransform: 'uppercase'
                                             }}
                                         >
-                                            {item.value}
+                                            {item.display_name || item.metric_key}
                                         </Typography>
 
-                                        <Typography
+                                        <Box
                                             sx={{
-                                                color: '#888',
-                                                fontSize: 12,
+                                                display: 'flex',
+                                                alignItems: 'baseline',
+                                                gap: 0.5,
+                                                flexWrap: 'wrap',
                                             }}
                                         >
-                                            {item.unit}
-                                        </Typography>
+                                            <Typography
+                                                sx={{
+                                                    fontSize: 22,
+                                                    fontWeight: 600,
+                                                    lineHeight: 1,
+                                                }}
+                                            >
+                                                {item.latest_value !== null && item.latest_value !== undefined ? item.latest_value : '0'}
+                                            </Typography>
+
+                                            <Typography
+                                                sx={{
+                                                    color: '#888',
+                                                    fontSize: 12,
+                                                }}
+                                            >
+                                                {item.unit || ''}
+                                            </Typography>
+                                        </Box>
                                     </Box>
-                                </Box>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Paper>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Paper>
+                )}
             </Box>
         </Box >
     );
