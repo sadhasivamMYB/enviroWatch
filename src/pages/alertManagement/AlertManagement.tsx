@@ -36,11 +36,11 @@ export default function AlertManagement() {
     const [search, setSearch] = useState("");
     const [sensorFilter, setSensorFilter] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState(null);
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
     useEffect(() => {
-        setPage(1);
+        setPage(0);
     }, [search, activeLocation, sensorFilter, statusFilter]);
 
     const { data: locationData } = useGetLocationsQuery({})
@@ -68,7 +68,7 @@ export default function AlertManagement() {
         return matchesSearch && matchesLocation;
     });
 
-    const paginatedData = filtered?.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+    const paginatedData = filtered?.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
     const handleDelete = (id: string) => {
         // handler placeholder
@@ -239,7 +239,8 @@ export default function AlertManagement() {
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#f8fafc" }}>
                                         {[
-                                            { label: "Device Name", hasFilter: false, width: "35%" },
+                                            { label: "Rule Name", hasFilter: false, width: "18%" },
+                                            { label: "Device Name", hasFilter: false, width: "17%" },
                                             { label: "Sensor", hasFilter: false, width: "16%" },
                                             { label: "Min", hasFilter: false, width: "16%" },
                                             { label: "Max", hasFilter: false, width: "16%" },
@@ -315,14 +316,14 @@ export default function AlertManagement() {
                                 <TableBody>
                                     {isAlertsLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                            <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
                                                 <CircularProgress size={32} sx={{ color: "#0d9488" }} />
                                             </TableCell>
                                         </TableRow>
                                     ) : !paginatedData || paginatedData?.length === 0 ? (
                                         <TableRow>
                                             <TableCell
-                                                colSpan={6}
+                                                colSpan={7}
                                                 align="center"
                                                 sx={{
                                                     py: 10,
@@ -347,6 +348,25 @@ export default function AlertManagement() {
                                                     bgcolor: idx % 2 === 0 ? "#fff" : "#fcfcfc",
                                                 }}
                                             >
+                                                {/* Rule Name */}
+                                                <TableCell
+                                                    sx={{
+                                                        px: 2,
+                                                        py: 1.8,
+                                                        borderBottom: "1px solid #f3f4f6",
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "14px",
+                                                            color: "#111827",
+                                                            lineHeight: 1.4,
+                                                        }}
+                                                    >
+                                                        {row.rule_name}
+                                                    </Typography>
+                                                </TableCell>
+
                                                 {/* Device Name */}
                                                 <TableCell
                                                     sx={{
@@ -357,25 +377,12 @@ export default function AlertManagement() {
                                                 >
                                                     <Typography
                                                         sx={{
-                                                            fontSize: "0.65rem",
-                                                            color: "#9ca3af",
-                                                            fontWeight: 500,
-                                                            lineHeight: 1,
-                                                        }}
-                                                    >
-                                                        {row?.deviceCode || "-"}
-                                                    </Typography>
-
-                                                    <Typography
-                                                        sx={{
                                                             fontSize: "14px",
-
                                                             color: "#111827",
                                                             lineHeight: 1.4,
-                                                            mt: 0.25,
                                                         }}
                                                     >
-                                                        {row.rule_name}
+                                                        {row.device_name}
                                                     </Typography>
                                                 </TableCell>
 
