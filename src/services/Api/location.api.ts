@@ -69,32 +69,6 @@ export const locationApi = createApi({
     //   providesTags: ["Devices"],
     // }),
 
-    // Location ID based Devices
-
-    getLocationIdDevices: builder.query<any, paramsArgs>({
-      query: (args = {}) => {
-        const params = new URLSearchParams();
-
-
-        if (args.limit !== undefined) {
-          params.append("limit", args.limit.toString());
-        }
-
-        if (args.offset !== undefined) {
-          params.append("offset", args.offset.toString());
-        }
-
-        return {
-          url: `/locations/${args?.location_id}/devices${params.toString() ? `?${params.toString()}` : ""}`,
-          method: "GET",
-        }
-      },
-
-      providesTags: ["Devices"],
-    }),
-
-
-
     // GET single location
     // getLocationById: builder.query<Location, string>({
     //   query: (id) => `/locations/${id}`,
@@ -141,5 +115,4 @@ export const {
   useAddLocationMutation,
   useUpdateLocationMutation,
   useDeleteLocationMutation,
-  useGetLocationIdDevicesQuery
 } = locationApi;

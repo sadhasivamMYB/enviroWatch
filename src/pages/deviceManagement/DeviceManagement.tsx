@@ -20,8 +20,8 @@ import {
 } from "@mui/icons-material";
 
 import DeviceManagementForm from "./DeviceForm";
-import { useGetLocationIdDevicesQuery, useGetLocationsQuery } from "../../services/Api/location.api";
-import { useAddDeviceMutation, useDeleteDeviceMutation, useUpdateDeviceMutation } from "../../services/Api/device.api";
+import { useGetLocationsQuery } from "../../services/Api/location.api";
+import { useAddDeviceMutation, useDeleteDeviceMutation, useUpdateDeviceMutation, useGetLocationIdDevicesQuery } from "../../services/Api/device.api";
 import PageTitle from "../../components/Pagetitle";
 import SearchBar from "../../components/SearchBar";
 import CommonPagination from "../../components/Pagination";

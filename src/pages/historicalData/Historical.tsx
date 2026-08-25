@@ -7,7 +7,8 @@ import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import LocationWise from "./LocationWise";
 import PageTitle from "../../components/Pagetitle";
 import Back from "../../components/Back";
-import { useGetLocationIdDevicesQuery, useGetLocationsQuery } from "../../services/Api/location.api";
+import { useGetLocationsQuery } from "../../services/Api/location.api";
+import { useGetLocationIdDevicesQuery } from "../../services/Api/device.api";
 
 
 

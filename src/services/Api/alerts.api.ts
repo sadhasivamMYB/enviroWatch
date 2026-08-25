@@ -45,7 +45,7 @@ export const alertsApi = createApi({
 
         deleteAlertRule: builder.mutation<any, string>({
             query: (id) => ({
-                url: `/alerts/alert-rules/${id}`,
+                url: `/alert-rules/${id}`,
                 method: "DELETE",
             }),
             invalidatesTags: ["alerts"]
@@ -53,4 +53,4 @@ export const alertsApi = createApi({
     })
 })
 
-export const { useGetAlertRulesQuery, useGetActiveAlertsQuery, useAddAlertRuleMutation, useUpdateAlertRuleMutation } = alertsApi
+export const { useGetAlertRulesQuery, useGetActiveAlertsQuery, useAddAlertRuleMutation, useUpdateAlertRuleMutation, useDeleteAlertRuleMutation } = alertsApi

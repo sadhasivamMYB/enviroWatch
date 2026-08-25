@@ -26,8 +26,8 @@ import { inputStyles } from '../../theme';
 
 export const sensorsList = [
     {
-        metric_key: "lux",
-        display_name: "Lux",
+        metric_key: "light",
+        display_name: "Light",
         unit: "lx"
     },
     {
@@ -299,12 +299,13 @@ export default function DeviceManagementForm({ open, onclose, isEdit, initialVal
                                     onChange={(e) => setDeviceType(e.target.value as string)}
                                 >
 
-                                    <MenuItem sx={{ fontSize: 12 }} value="temperature">Temperature Senosor</MenuItem>
-                                    <MenuItem sx={{ fontSize: 12 }} value="light">Light Senosor</MenuItem>
-                                    <MenuItem sx={{ fontSize: 12 }} value="noice">Noice Senosor</MenuItem>
-                                    <MenuItem sx={{ fontSize: 12 }} value="tds">TDS Senosor</MenuItem>
-                                    <MenuItem sx={{ fontSize: 12 }} value="ph">PH Senosor</MenuItem>
-                                    <MenuItem sx={{ fontSize: 12 }} value="cod">COD Senosor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="temperature">Temperature Sensor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="light">Light Sensor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="noise">Noise Sensor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="tds">TDS Sensor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="ph">PH Sensor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="cod">COD Sensor</MenuItem>
+                                    <MenuItem sx={{ fontSize: 12 }} value="aqi">AQI Sensor</MenuItem>
 
                                 </Select>
                             </FormControl>

@@ -18,7 +18,8 @@ import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneR
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { inputStyles } from '../../theme';
-import { useGetLocationIdDevicesQuery, useGetLocationsQuery } from '../../services/Api/location.api';
+import { useGetLocationsQuery } from '../../services/Api/location.api';
+import { useGetLocationIdDevicesQuery } from '../../services/Api/device.api';
 
 
 export default function AddRuleDialog({ open, onclose, isEdit, initialValues, onsubmit, isLoading = false }: any) {

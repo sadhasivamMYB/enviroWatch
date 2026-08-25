@@ -24,7 +24,7 @@ import PageTitle from "../../components/Pagetitle";
 import StatusBadge from "../../components/StatusBadge";
 import CommonPagination from "../../components/Pagination";
 import { useGetLocationsQuery } from "../../services/Api/location.api";
-import { useAddAlertRuleMutation, useGetAlertRulesQuery, useUpdateAlertRuleMutation } from "../../services/Api/alerts.api";
+import { useAddAlertRuleMutation, useGetAlertRulesQuery, useUpdateAlertRuleMutation, useDeleteAlertRuleMutation } from "../../services/Api/alerts.api";
 
 // Types
 
@@ -50,9 +50,9 @@ export default function AlertManagement() {
 
     const LocationData = locationData?.locations
 
-    // const { data: DeviceData } = useGetDevicesQuery(activeLocation);
     const [AddAlertRule] = useAddAlertRuleMutation()
     const [UpdateAlertRule] = useUpdateAlertRuleMutation()
+    const [deleteAlertRule] = useDeleteAlertRuleMutation()
 
     const activeLabel = LocationData?.find((l) => l.id === activeLocation)?.name ?? "";
 
@@ -70,9 +70,12 @@ export default function AlertManagement() {
 
     const paginatedData = filtered?.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
 
-    const handleDelete = (id: string) => {
-        // handler placeholder
-        console.log("Delete", id);
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteAlertRule(id).unwrap();
+        } catch (error) {
+            console.error("Failed to delete alert rule:", error);
+        }
     };
 
     const [open, setOpen] = useState(false)
@@ -239,8 +242,7 @@ export default function AlertManagement() {
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#f8fafc" }}>
                                         {[
-                                            { label: "Rule Name", hasFilter: false, width: "18%" },
-                                            { label: "Device Name", hasFilter: false, width: "17%" },
+                                            { label: "Device Name", hasFilter: false, width: "35%" },
                                             { label: "Sensor", hasFilter: false, width: "16%" },
                                             { label: "Min", hasFilter: false, width: "16%" },
                                             { label: "Max", hasFilter: false, width: "16%" },
@@ -316,14 +318,14 @@ export default function AlertManagement() {
                                 <TableBody>
                                     {isAlertsLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
                                                 <CircularProgress size={32} sx={{ color: "#0d9488" }} />
                                             </TableCell>
                                         </TableRow>
                                     ) : !paginatedData || paginatedData?.length === 0 ? (
                                         <TableRow>
                                             <TableCell
-                                                colSpan={7}
+                                                colSpan={6}
                                                 align="center"
                                                 sx={{
                                                     py: 10,
@@ -348,25 +350,6 @@ export default function AlertManagement() {
                                                     bgcolor: idx % 2 === 0 ? "#fff" : "#fcfcfc",
                                                 }}
                                             >
-                                                {/* Rule Name */}
-                                                <TableCell
-                                                    sx={{
-                                                        px: 2,
-                                                        py: 1.8,
-                                                        borderBottom: "1px solid #f3f4f6",
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: "14px",
-                                                            color: "#111827",
-                                                            lineHeight: 1.4,
-                                                        }}
-                                                    >
-                                                        {row.rule_name}
-                                                    </Typography>
-                                                </TableCell>
-
                                                 {/* Device Name */}
                                                 <TableCell
                                                     sx={{
@@ -377,12 +360,25 @@ export default function AlertManagement() {
                                                 >
                                                     <Typography
                                                         sx={{
-                                                            fontSize: "14px",
-                                                            color: "#111827",
-                                                            lineHeight: 1.4,
+                                                            fontSize: "0.65rem",
+                                                            color: "#9ca3af",
+                                                            fontWeight: 500,
+                                                            lineHeight: 1,
                                                         }}
                                                     >
-                                                        {row.device_name}
+                                                        {row?.deviceCode || "-"}
+                                                    </Typography>
+
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "14px",
+
+                                                            color: "#111827",
+                                                            lineHeight: 1.4,
+                                                            mt: 0.25,
+                                                        }}
+                                                    >
+                                                        {row.rule_name}
                                                     </Typography>
                                                 </TableCell>
 

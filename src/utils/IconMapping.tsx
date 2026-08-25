@@ -21,7 +21,7 @@ const defaultConfig = {
 };
 
 const sensorConfig = {
-    lux: {
+    light: {
         icon: WbSunnyOutlinedIcon,
         iconBg: "#FFF2E4",
         iconColor: "#FF8A00",

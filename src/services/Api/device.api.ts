@@ -1,8 +1,11 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import baseQueryWithAuth from "../../utils/AuthProtect";
 
-
-
+interface paramsArgs {
+    location_id?: number | string;
+    offset?: number;
+    limit?: number;
+}
 
 export const devicesApi = createApi({
     reducerPath: "devicesApi",
@@ -16,8 +19,28 @@ export const devicesApi = createApi({
             providesTags: ["Devices"],
         }),
 
-        // Get device based mertics
+        // Location ID based Devices
+        getLocationIdDevices: builder.query<any, paramsArgs>({
+            query: (args = {}) => {
+                const params = new URLSearchParams();
 
+                if (args.limit !== undefined) {
+                    params.append("limit", args.limit.toString());
+                }
+
+                if (args.offset !== undefined) {
+                    params.append("offset", args.offset.toString());
+                }
+
+                return {
+                    url: `/locations/${args?.location_id}/devices${params.toString() ? `?${params.toString()}` : ""}`,
+                    method: "GET",
+                }
+            },
+            providesTags: ["Devices"],
+        }),
+
+        // Get device based mertics
         getDeviceIdByMetrics: builder.query<any, any>({
             query: (device_id) => `/devices/${device_id}/metrics`,
             providesTags: ["Devices"],
@@ -59,5 +82,6 @@ export const {
     useAddDeviceMutation,
     useUpdateDeviceMutation,
     useDeleteDeviceMutation,
-    useGetDeviceIdByMetricsQuery
+    useGetDeviceIdByMetricsQuery,
+    useGetLocationIdDevicesQuery,
 } = devicesApi;
