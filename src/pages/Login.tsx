@@ -46,6 +46,9 @@ const LoginPage = () => {
                 if (response) {
                     localStorage.setItem("token", response.access_token)
                     localStorage.setItem("isAuthenticated", "true")
+                    if (response.user) {
+                        localStorage.setItem("user", JSON.stringify(response.user));
+                    }
                     navigate("/");
                 }
             })
