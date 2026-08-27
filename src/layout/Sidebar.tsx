@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { navItems } from "../config/navConfig";
 import { Role } from "../config/roles";
@@ -16,17 +16,27 @@ import {
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { iconMap } from "../config/IconMapping";
+import { useGetMeQuery } from "../services/Api/login.api";
 
 const Sidebar = () => {
     const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
+
+    // Fetch dynamic user profile details when sidebar mounts
+    const { data: meData } = useGetMeQuery(undefined, { skip: !localStorage.getItem("token") });
 
     // Retrieve user from localStorage
     const userStr = localStorage.getItem("user");
     const currentUser = userStr ? JSON.parse(userStr) : null;
 
     // Default username/role if not in local storage
-    const fullName = currentUser?.full_name || "Sarah Johnson";
-    const roleName = currentUser?.role_name || "Manager";
+    const fullName = meData?.full_name || currentUser?.full_name || "Sarah Johnson";
+    const roleName = meData?.role_name || currentUser?.role_name || "Manager";
+
+    useEffect(() => {
+        if (meData) {
+            localStorage.setItem("user", JSON.stringify(meData));
+        }
+    }, [meData]);
 
     // Helper to get initials
     const getInitials = (name: string) => {

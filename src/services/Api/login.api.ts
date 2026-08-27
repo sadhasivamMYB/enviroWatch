@@ -18,6 +18,13 @@ type LoginType = {
 export const loginApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: BaseURL + "/api/v1/auth",
+        prepareHeaders: (headers) => {
+            const token = localStorage.getItem("token");
+            if (token) {
+                headers.set("Authorization", `Bearer ${token}`);
+            }
+            return headers;
+        },
     }),
     endpoints: (builder) => ({
         login: builder.mutation<ApiResponse<IUser>, LoginType>({
@@ -27,8 +34,14 @@ export const loginApi = createApi({
                 body: credentials,
             }),
         }),
+        getMe: builder.query<any, void>({
+            query: () => ({
+                url: "/me",
+                method: "GET",
+            })
+        }),
     }),
 });
 
 
-export const { useLoginMutation } = loginApi;
+export const { useLoginMutation, useGetMeQuery } = loginApi;
