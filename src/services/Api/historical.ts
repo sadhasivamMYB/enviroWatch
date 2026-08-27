@@ -21,6 +21,10 @@ export const historicalApi = createApi({
         getHistoricalHistory: builder.query({
             query: () => "/history"
         }),
+        getLocationHistory: builder.query({
+            query: ({ location_id, from_date, to_date }) => 
+                `/history/location/${location_id}?from_date=${from_date}&to_date=${to_date}`
+        }),
         getTelemetryCsv: builder.query({
             query: () => "/telemetry/csv"
         }),
@@ -43,6 +47,7 @@ export const historicalApi = createApi({
 })
 
 export const { useGetHistoricalHistoryQuery,
+    useGetLocationHistoryQuery,
     useGetTelemetryCsvQuery,
     useGetTelemetryExcelQuery,
     useGetLocationSummaryCsvQuery,

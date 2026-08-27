@@ -28,5 +28,22 @@ export const inputStyles = {
             borderColor: "#00796B",
             borderWidth: "1px",
         },
+
+        "& .MuiOutlinedInput-input": {
+            paddingTop: "0px",
+            paddingBottom: "0px",
+            height: "40px",
+            boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
+        },
+
+        "& input[type='date']": {
+            padding: "0px 14px",
+            height: "40px",
+            boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
+        },
     },
 };
