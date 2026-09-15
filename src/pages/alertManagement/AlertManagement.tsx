@@ -242,15 +242,16 @@ export default function AlertManagement() {
                                 <TableHead>
                                     <TableRow sx={{ bgcolor: "#f8fafc" }}>
                                         {[
-                                            { label: "Device Name", hasFilter: false, width: "35%" },
-                                            { label: "Sensor", hasFilter: false, width: "16%" },
-                                            { label: "Min", hasFilter: false, width: "16%" },
-                                            { label: "Max", hasFilter: false, width: "16%" },
-                                            { label: "Status", hasFilter: false, width: "16%" },
+                                            { label: "Alert Name", hasFilter: false, width: "20%" },
+                                            { label: "Device Name", hasFilter: false, width: "15%" },
+                                            { label: "Sensor", hasFilter: false, width: "15%" },
+                                            { label: "Min", hasFilter: false, width: "15%" },
+                                            { label: "Max", hasFilter: false, width: "15%" },
+                                            { label: "Status", hasFilter: false, width: "10%" },
                                             {
                                                 label: "Action",
                                                 hasFilter: false,
-                                                width: "14%",
+                                                width: "10%",
                                                 align: "center" as const,
                                             },
                                         ].map((col) => (
@@ -318,14 +319,14 @@ export default function AlertManagement() {
                                 <TableBody>
                                     {isAlertsLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                            <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
                                                 <CircularProgress size={32} sx={{ color: "#0d9488" }} />
                                             </TableCell>
                                         </TableRow>
                                     ) : !paginatedData || paginatedData?.length === 0 ? (
                                         <TableRow>
                                             <TableCell
-                                                colSpan={6}
+                                                colSpan={7}
                                                 align="center"
                                                 sx={{
                                                     py: 10,
@@ -350,6 +351,25 @@ export default function AlertManagement() {
                                                     bgcolor: idx % 2 === 0 ? "#fff" : "#fcfcfc",
                                                 }}
                                             >
+                                                {/* Alert Name */}
+                                                <TableCell
+                                                    sx={{
+                                                        px: 2,
+                                                        py: 1.8,
+                                                        borderBottom: "1px solid #f3f4f6",
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "14px",
+                                                            color: "#111827",
+                                                            lineHeight: 1.4,
+                                                        }}
+                                                    >
+                                                        {row.rule_name}
+                                                    </Typography>
+                                                </TableCell>
+
                                                 {/* Device Name */}
                                                 <TableCell
                                                     sx={{
@@ -366,7 +386,7 @@ export default function AlertManagement() {
                                                             lineHeight: 1,
                                                         }}
                                                     >
-                                                        {row?.deviceCode || "-"}
+                                                        {row?.device_uid || "-"}
                                                     </Typography>
 
                                                     <Typography
@@ -378,7 +398,7 @@ export default function AlertManagement() {
                                                             mt: 0.25,
                                                         }}
                                                     >
-                                                        {row.rule_name}
+                                                        {row?.device_name || "-"}
                                                     </Typography>
                                                 </TableCell>
 

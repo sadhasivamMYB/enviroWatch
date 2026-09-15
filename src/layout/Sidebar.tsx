@@ -211,12 +211,14 @@ const Sidebar = () => {
             <Dialog
                 open={openLogoutDialog}
                 onClose={() => setOpenLogoutDialog(false)}
-                PaperProps={{
-                    sx: {
-                        borderRadius: "16px",
-                        padding: 1,
-                        background: "#fff",
-                        maxWidth: "340px"
+                slotProps={{
+                    paper: {
+                        sx: {
+                            borderRadius: "16px",
+                            padding: 1,
+                            background: "#fff",
+                            maxWidth: "340px"
+                        }
                     }
                 }}
             >

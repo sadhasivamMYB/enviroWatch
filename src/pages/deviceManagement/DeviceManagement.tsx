@@ -30,8 +30,8 @@ import StatusBadge from "../../components/StatusBadge";
 const columns = [
     { label: "Sensor Name", width: 180 },
     { label: "Type", width: 120 },
+    { label: "Last Seen", width: 150 },
     { label: "Status", width: 100 },
-    { label: "Sensors", width: 130 },
     { label: "Actions", width: 90, align: "center" },
 ];
 
@@ -241,18 +241,17 @@ export default function AlertManagement() {
                                         ))}
                                     </TableRow>
                                 </TableHead>
-
                                 <TableBody>
                                     {isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                                            <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
                                                 <CircularProgress size={32} sx={{ color: "#0d9488" }} />
                                             </TableCell>
                                         </TableRow>
                                     ) : filtered?.length == 0 ?
                                         <TableRow>
                                             <TableCell
-                                                colSpan={6}
+                                                colSpan={5}
                                                 align="center"
                                                 sx={{
                                                     py: 10,
@@ -289,30 +288,16 @@ export default function AlertManagement() {
                                                     </Typography>
                                                 </TableCell>
 
+                                                {/* Last Seen */}
+                                                <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
+                                                    <Typography sx={{ fontSize: "14px", color: "#4b5563" }}>
+                                                        {row.last_seen ? String(row.last_seen).replace("T", " ").substring(0, 16) : "-"}
+                                                    </Typography>
+                                                </TableCell>
+
                                                 {/* Status */}
                                                 <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
                                                     <StatusBadge status={row.is_active ? "Active" : "Inactive"} />
-                                                </TableCell>
-
-                                                {/* Sensor */}
-                                                <TableCell sx={{ px: 2, py: 1.75, borderBottom: "1px solid #f3f4f6" }}>
-                                                    <Box sx={{ display: "flex", gap: 0.5 }}>
-                                                        {
-                                                            row?.sensors && row?.sensors?.length > 0 ? (
-                                                                row?.sensors?.map((sensor: any) => (
-                                                                    <Typography key={sensor.metric_key} sx={{ fontSize: "0.7rem", backgroundColor: "#eaeaeaff", borderRadius: "4px", padding: "2px 4px", width: "fit-content", color: "#474747ff" }}>
-                                                                        {sensor.display_name}
-                                                                    </Typography>
-                                                                ))
-                                                            ) : (
-                                                                <Typography sx={{ fontSize: "0.7rem", color: "#474747ff" }}>
-                                                                    -
-                                                                </Typography>
-                                                            )
-                                                        }
-
-
-                                                    </Box>
                                                 </TableCell>
 
                                                 {/* Actions */}

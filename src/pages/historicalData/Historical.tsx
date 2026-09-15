@@ -1,6 +1,6 @@
 import { Box, Button, FormControl, InputLabel, MenuItem, Select, Tab, Tabs, TextField, Menu } from "@mui/material";
 import ParameterWise from "./ParameterWise";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { inputStyles } from "../../theme";
 import { KeyboardArrowDownOutlined } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
@@ -361,8 +361,10 @@ const Historical = () => {
                         value={from}
                         onChange={(e) => handleFromChange(e.target.value)}
                         sx={{ ...inputStyles, minWidth: 160 }}
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{ max: to }}
+                        slotProps={{
+                            inputLabel: { shrink: true },
+                            htmlInput: { max: to }
+                        }}
                     />
                     <TextField
                         type="date"
@@ -370,10 +372,12 @@ const Historical = () => {
                         value={to}
                         onChange={(e) => handleToChange(e.target.value)}
                         sx={{ ...inputStyles, minWidth: 160 }}
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{
-                            min: from,
-                            max: getOffsetDate(from, 2)
+                        slotProps={{
+                            inputLabel: { shrink: true },
+                            htmlInput: {
+                                min: from,
+                                max: getOffsetDate(from, 2)
+                            }
                         }}
                     />
                 </Box>

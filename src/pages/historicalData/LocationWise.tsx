@@ -12,7 +12,7 @@ import {
 } from "@mui/icons-material";
 import { LineChart } from "@mui/x-charts/LineChart";
 
-const LocationWise = ({ locationName, devices, from, to, historyData, isFetchingHistory }: any) => {
+const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }: any) => {
     const [metric, setMetric] = useState(0); // 0=Temperature, 1=Humidity
 
     if (!locationName) {
@@ -103,7 +103,7 @@ const LocationWise = ({ locationName, devices, from, to, historyData, isFetching
             label: getDeviceLabel(uid),
             color: colors[idx % colors.length],
             showMark: true,
-            curve: "catmullRom",
+            curve: "catmullRom" as const,
         };
     });
 

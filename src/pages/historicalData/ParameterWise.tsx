@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { LineChart } from "@mui/x-charts";
 
-const ParameterWise = ({ selectedLocations, parameter, locationsData, allDevices, from, to, historyData, isFetchingHistory }: any) => {
+const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, isFetchingHistory }: any) => {
     
     if (!selectedLocations || selectedLocations.length === 0 || !parameter) {
         return (
@@ -77,7 +77,7 @@ const ParameterWise = ({ selectedLocations, parameter, locationsData, allDevices
             label: locName ? `${locName} - ${devName}` : devName,
             color: colors[idx % colors.length],
             showMark: true,
-            curve: "catmullRom",
+            curve: "catmullRom" as const,
         };
     });
 
