@@ -6,7 +6,9 @@ import {
     TextField,
     Typography,
     Backdrop,
-    CircularProgress
+    CircularProgress,
+    IconButton,
+    InputAdornment
 } from "@mui/material";
 
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
@@ -14,10 +16,13 @@ import { inputStyles } from "../theme";
 import { useLoginMutation } from "../services/Api/login.api";
 import { useNavigate } from "react-router-dom";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const LoginPage = () => {
 
     const navigate = useNavigate()
+    const [showPassword, setShowPassword] = useState(false);
 
 
 
@@ -213,12 +218,29 @@ const LoginPage = () => {
                                 <TextField
                                     fullWidth
                                     required
+                                    type={showPassword ? "text" : "password"}
                                     value={formData.password}
                                     onChange={(e) =>
                                         handleChange("password", e.target.value)
                                     }
                                     variant="outlined"
                                     sx={inputStyles}
+                                    slotProps={{
+                                        input: {
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        edge="end"
+                                                        size="small"
+                                                        sx={{ color: "#6b7280" }}
+                                                    >
+                                                        {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            ),
+                                        }
+                                    }}
                                 />
                             </Box>
 

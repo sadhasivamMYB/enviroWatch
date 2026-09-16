@@ -240,7 +240,7 @@ const UserFormModal: React.FC<UserModalProps> = ({
 
                             <TextField
                                 fullWidth
-                                // type="password"
+                                type="password"
                                 value={formData.password}
                                 onChange={(e) =>
                                     handleChange("password", e.target.value)
