@@ -185,10 +185,7 @@ export const FacilityCard: React.FC<any> = ({
     const {
         location_name: name,
         description,
-        status,
-        totalDevices,
-        activeDevices,
-        inactiveDevices } = data
+        status } = data
 
     const cfg = STATUS_CONFIG[status?.length > 0 ? 'alert' : "normal"];
     const handleb = () => {
@@ -313,27 +310,13 @@ export const FacilityCard: React.FC<any> = ({
                 {/* Footer */}
                 <Box
                     sx={{
-
                         paddingX: 1.2,
-
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
+                        justifyContent: "flex-end",
                         background: "white"
                     }}
                 >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, paddingBottom: 0 }}>
-                        <Typography sx={{ color: "#6b7280", fontWeight: 600, fontSize: "0.6rem" }}>
-                            {totalDevices} Devices
-                        </Typography>
-                        <Typography sx={{ color: "#22c55e", fontWeight: 700, fontSize: "0.6rem" }}>
-                            {activeDevices} Active
-                        </Typography>
-                        <Typography sx={{ color: "#ef4444", fontWeight: 700, fontSize: "0.6rem" }}>
-                            {inactiveDevices} InActive
-                        </Typography>
-                    </Box>
-
                     <Link
 
                         component="button"
