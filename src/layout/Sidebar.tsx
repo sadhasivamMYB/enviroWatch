@@ -28,9 +28,12 @@ const Sidebar = () => {
     const userStr = localStorage.getItem("user");
     const currentUser = userStr ? JSON.parse(userStr) : null;
 
-    // User name and role dynamically loaded from API (meData) or localStorage (currentUser)
-    const fullName = meData?.full_name || meData?.name || meData?.username || meData?.email || currentUser?.full_name || currentUser?.name || currentUser?.username || currentUser?.email || "";
-    const roleName = meData?.role_name || meData?.role || currentUser?.role_name || currentUser?.role || "";
+    // Extract user object from meData or currentUser (supporting direct or nested { data: ... } / { user: ... } wrappers)
+    const userObj = meData?.data || meData?.user || meData || currentUser?.data || currentUser?.user || currentUser;
+
+    // User name and role dynamically loaded from API or localStorage
+    const fullName = userObj?.full_name || userObj?.name || userObj?.display_name || userObj?.username || userObj?.email || "";
+    const roleName = userObj?.role_name || userObj?.role || userObj?.user_role || "";
 
     useEffect(() => {
         if (meData) {
