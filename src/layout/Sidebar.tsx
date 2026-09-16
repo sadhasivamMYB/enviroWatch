@@ -28,9 +28,9 @@ const Sidebar = () => {
     const userStr = localStorage.getItem("user");
     const currentUser = userStr ? JSON.parse(userStr) : null;
 
-    // Default username/role if not in local storage
-    const fullName = meData?.full_name || currentUser?.full_name || "Sarah Johnson";
-    const roleName = meData?.role_name || currentUser?.role_name || "Manager";
+    // User name and role dynamically loaded from API (meData) or localStorage (currentUser)
+    const fullName = meData?.full_name || meData?.name || meData?.username || meData?.email || currentUser?.full_name || currentUser?.name || currentUser?.username || currentUser?.email || "";
+    const roleName = meData?.role_name || meData?.role || currentUser?.role_name || currentUser?.role || "";
 
     useEffect(() => {
         if (meData) {
