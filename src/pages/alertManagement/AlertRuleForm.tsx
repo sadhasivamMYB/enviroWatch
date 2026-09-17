@@ -407,7 +407,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                             mt: -4
                                         }}
                                     >
-                                        Min (℃)
+                                        Min
                                     </Typography>
 
                                     <TextField
@@ -480,7 +480,7 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                             ml: 10
                                         }}
                                     >
-                                        Max (℃)
+                                        Max
                                     </Typography>
 
                                     <TextField

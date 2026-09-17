@@ -117,17 +117,13 @@ const MetricTile: React.FC<{
     unit: string
 }> = ({ metric, type, unit }) => {
 
-    const labelColors: any = {
+    const labelColors: Record<string, string> = {
         temperature: "#b38600",
         humidity: "#00a395",
         aqi: "#039900",
     };
 
-    // const unit = {
-    //     temperature: "°C",
-    //     humidity: "%",
-    //     aqi: "Good"
-    // }
+    const key = (type || "").toLowerCase();
 
     return (
         <Box
@@ -138,7 +134,7 @@ const MetricTile: React.FC<{
                 bgcolor: "rgba(255,255,255,0.72)",
                 border: "1px solid rgba(241, 241, 241, 0.9)",
                 borderRadius: "8px",
-                padding: "4px 4px ",
+                padding: "4px 8px",
                 flex: 1,
                 minWidth: 0,
             }}
@@ -151,16 +147,18 @@ const MetricTile: React.FC<{
                     sx={{ fontSize: "14px", fontWeight: 600, color: "#000", }}
                 >
                     {metric}
-                    <span style={{ marginLeft: "1px" }}>{unit}</span>
+                    <span style={{ marginLeft: "2px", fontSize: "12px", fontWeight: 500, color: "#666" }}>{unit}</span>
                 </Typography>
 
             </Box>
 
-            <Typography
-                sx={{ color: labelColors[type], fontWeight: 500, fontSize: "0.6rem" }}
-            >
-                {type}
-            </Typography>
+            {type && (
+                <Typography
+                    sx={{ color: labelColors[key] || "#666", fontWeight: 500, fontSize: "0.6rem", textTransform: "capitalize" }}
+                >
+                    {type}
+                </Typography>
+            )}
         </Box>
     );
 };
@@ -168,37 +166,39 @@ const MetricTile: React.FC<{
 
 // ─── Main Component
 
-// export const FacilityCard: React.FC<FacilityCardProps> = ({
 export const FacilityCard: React.FC<any> = ({
     data,
     onViewDetails
 }) => {
 
-
-    // const navigate = useNavigate();
-
-    const tempValue = data.devices.find((e: any) => e.device_type == "temperature")
-    const tempMetricValue = tempValue?.metrics?.find((e: any) => e.metric_key == "temperature")
-
-
+    const tempValue = data?.devices?.find((e: any) => e.device_type == "temperature");
+    const tempMetricValue = tempValue?.metrics?.find((e: any) => e.metric_key == "temperature");
 
     const {
         location_name: name,
         description,
-        status } = data
+        status } = data;
 
     const cfg = STATUS_CONFIG[status?.length > 0 ? 'alert' : "normal"];
     const handleb = () => {
-
         onViewDetails(data?.location_id);
+    };
 
+    const deviceMetrics = data?.devices?.flatMap((d: any) => d?.metrics?.filter((m: any) => m && m.metric_key)) || [];
+    const otherMetrics: any[] = [];
+    deviceMetrics.forEach((m: any) => {
+        if (m.metric_key !== "temperature" && !otherMetrics.some(existing => existing.metric_key === m.metric_key)) {
+            otherMetrics.push(m);
+        }
+    });
+
+    const metricsToDisplay: any[] = [];
+    if (tempMetricValue) {
+        metricsToDisplay.push(tempMetricValue);
     }
-
-    const deviceMetrics = data?.devices?.flatMap((d: any) => d?.metrics) || [];
-    const filter = deviceMetrics?.filter?.((e: any) => e.metric_key !== "temperature")
-
-    console.log(filter, "filter")
-
+    otherMetrics.slice(0, tempMetricValue ? 1 : 2).forEach((m) => {
+        metricsToDisplay.push(m);
+    });
 
     return (
         <Card
@@ -241,25 +241,6 @@ export const FacilityCard: React.FC<any> = ({
                         }}
                     >
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            {/* {icon && (
-                                <Box
-                                    sx={{
-                                        width: 40,
-                                        height: 40,
-                                        borderRadius: 2,
-                                        bgcolor: "rgba(255,255,255,0.8)",
-                                        border: "1px solid rgba(255,255,255,0.95)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        boxShadow: "0 1px 5px rgba(0,0,0,0.07)",
-                                        fontSize: 20,
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    {icon}
-                                </Box>
-                            )} */}
                             <RoomPreferencesOutlined sx={{ color: "#1a1a2e" }} />
                             <Box>
                                 <Typography
@@ -294,14 +275,18 @@ export const FacilityCard: React.FC<any> = ({
                     </Box>
 
                     {/* Metrics Row */}
-                    <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
-                        <MetricTile metric={tempMetricValue?.latest_value || 0} type={tempMetricValue?.display_name} unit={tempMetricValue?.unit || ""} />
-                        {
-                            filter?.slice(0, 2).map((item: any) => (
-                                <MetricTile metric={item.latest_value || 0} type={item.display_name} unit={item.unit || ""} />
-                            ))
-                        }
-                    </Box>
+                    {metricsToDisplay.length > 0 && (
+                        <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
+                            {metricsToDisplay.map((item: any, i: number) => (
+                                <MetricTile
+                                    key={item.metric_key || i}
+                                    metric={item.latest_value ?? 0}
+                                    type={item.display_name || item.metric_name || item.metric_key}
+                                    unit={item.unit || ""}
+                                />
+                            ))}
+                        </Box>
+                    )}
 
                 </Box>
 

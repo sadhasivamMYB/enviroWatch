@@ -4,6 +4,8 @@ import {
     Chip,
     Divider,
     Grid,
+    Menu,
+    MenuItem,
     Paper,
     Typography,
 } from '@mui/material';
@@ -20,8 +22,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { getSensorConfig } from '../../utils/IconMapping';
 import { FactoryIcon } from 'lucide-react';
 // -- if sidebar needed then Fetch data from location API
-
-
 
 
 const StatusChip = ({ label }: any) => (
@@ -227,6 +227,9 @@ export default function ViewDetail() {
     const params = useParams()
     const id = params?.id
     const [data, setData] = useState<any>()
+    const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(new Date());
+    const [timeAgo, setTimeAgo] = useState<string>("Just now");
 
 
     const { data: dashboardData } = useGetDashboardQuery()
@@ -239,7 +242,122 @@ export default function ViewDetail() {
     }
     useEffect(() => {
         getLocationData()
-    }, [locationData])
+        if (dashboardData) {
+            setLastUpdated(new Date());
+        }
+    }, [locationData, dashboardData])
+
+    useEffect(() => {
+        const updateAgo = () => {
+            if (!lastUpdated) return;
+            const diffSeconds = Math.floor((new Date().getTime() - lastUpdated.getTime()) / 1000);
+            if (diffSeconds < 60) {
+                setTimeAgo("Just now");
+            } else {
+                const mins = Math.floor(diffSeconds / 60);
+                setTimeAgo(`${mins} min ago`);
+            }
+        };
+        updateAgo();
+        const interval = setInterval(updateAgo, 30000);
+        return () => clearInterval(interval);
+    }, [lastUpdated]);
+
+    const handleExportClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setExportAnchorEl(event.currentTarget);
+    };
+
+    const handleExportClose = () => {
+        setExportAnchorEl(null);
+    };
+
+    const handleExport = (type: "excel" | "pdf") => {
+        handleExportClose();
+        if (!validMetrics || validMetrics.length === 0) return;
+
+        if (type === "excel") {
+            let headers = "Metric Name,Metric Key,Latest Value,Unit\n";
+            let rows = validMetrics.map((m: any) => {
+                const val = m.latest_value !== undefined && m.latest_value !== null ? m.latest_value : '0';
+                const name = m.display_name || m.metric_name || m.metric_key;
+                return `"${name}","${m.metric_key}","${val}","${m.unit || ''}"`;
+            });
+            const content = headers + rows.join("\n");
+            const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${(data?.location_name || 'location').toLowerCase().replace(/\s+/g, '_')}_details.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            const printWindow = window.open("", "_blank");
+            if (printWindow) {
+                const tableRowsHtml = validMetrics.map((m: any) => {
+                    const val = m.latest_value !== undefined && m.latest_value !== null ? m.latest_value : '0';
+                    const name = m.display_name || m.metric_name || m.metric_key;
+                    return `
+                        <tr>
+                            <td>${name}</td>
+                            <td>${m.metric_key}</td>
+                            <td>${val} ${m.unit || ''}</td>
+                        </tr>
+                    `;
+                }).join("");
+
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>${data?.location_name || 'Location Details'} - Report</title>
+                            <style>
+                                body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; color: #111827; }
+                                .header { border-bottom: 2px solid #007A70; padding-bottom: 20px; margin-bottom: 30px; }
+                                .title { font-size: 22px; font-weight: 700; color: #007A70; margin-bottom: 5px; }
+                                .subtitle { font-size: 14px; color: #4B5563; margin-bottom: 10px; }
+                                .meta { font-size: 13px; color: #6B7280; }
+                                .stats { display: flex; gap: 20px; margin-top: 15px; font-size: 13px; }
+                                .stat-box { background: #F3F4F6; padding: 8px 16px; border-radius: 6px; }
+                                table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+                                th, td { padding: 12px 16px; border-bottom: 1px solid #E5E7EB; text-align: left; font-size: 13px; }
+                                th { background-color: #F9FAFB; font-weight: 600; font-size: 12px; color: #374151; }
+                                tr:nth-child(even) td { background-color: #FAFAFA; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <div class="title">${data?.location_name || 'Location Details'}</div>
+                                ${data?.description ? `<div class="subtitle">${data.description}</div>` : ''}
+                                <div class="stats">
+                                    <div class="stat-box"><strong>Total Devices:</strong> ${activeCounts.onlineDevices + activeCounts.offlineDevices}</div>
+                                    <div class="stat-box"><strong>Active:</strong> ${activeCounts.onlineDevices}</div>
+                                    <div class="stat-box"><strong>Inactive:</strong> ${activeCounts.offlineDevices}</div>
+                                </div>
+                                <div class="meta" style="margin-top: 15px;"><strong>Exported on:</strong> ${new Date().toLocaleString()}</div>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Metric Name</th>
+                                        <th>Metric Key</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableRowsHtml}
+                                </tbody>
+                            </table>
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 250);
+            }
+        }
+    };
 
 
     // count active devices 
@@ -390,9 +508,18 @@ export default function ViewDetail() {
                         }}
                         startIcon={<FileDownloadOutlinedIcon sx={{ height: "16px" }} />}
                         endIcon={<KeyboardArrowDownOutlined sx={{ height: "16px" }} />}
+                        onClick={handleExportClick}
                     >
                         Export
                     </Button>
+                    <Menu
+                        anchorEl={exportAnchorEl}
+                        open={Boolean(exportAnchorEl)}
+                        onClose={handleExportClose}
+                    >
+                        <MenuItem sx={{ fontSize: "13px" }} onClick={() => handleExport("excel")}>Export as Excel (CSV)</MenuItem>
+                        <MenuItem sx={{ fontSize: "13px" }} onClick={() => handleExport("pdf")}>Export as PDF</MenuItem>
+                    </Menu>
 
                 </Box>
 
@@ -444,7 +571,7 @@ export default function ViewDetail() {
                                         fontWeight: 600,
 
                                     }}>
-                                        {data?.location_name || "Johnson & Johnson"}
+                                        {data?.location_name || ""}
                                     </Typography>
 
                                     <Chip label={data?.status || "active"}
@@ -543,7 +670,7 @@ export default function ViewDetail() {
                             color: "#7A7A7A",
                             fontSize: 12
                         }}>
-                            Last updated: 2 min ago
+                            Last updated: {timeAgo}
                         </Typography>
                     </Box>
                 </Paper>
