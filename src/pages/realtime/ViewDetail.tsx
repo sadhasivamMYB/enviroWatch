@@ -24,30 +24,41 @@ import { FactoryIcon } from 'lucide-react';
 // -- if sidebar needed then Fetch data from location API
 
 
-const StatusChip = ({ label }: any) => (
-    <Chip
-        label={label || "Optimal"}
-        size="small"
-        sx={{
-            backgroundColor: '#DFF3DF',
-            color: '#2E8B57',
-            fontWeight: 400,
-            fontSize: 10,
-            borderRadius: '20px',
-            border: '1px solid #2E8B5720',
-            height: 22,
-        }}
-    />
-);
+const STATUS_STYLES: Record<string, { label: string; bg: string; color: string }> = {
+    alert: { label: 'Alert', bg: '#FDE8E8', color: '#DC2626' },
+    inactive: { label: 'Inactive', bg: '#F1F1F1', color: '#6B7280' },
+    normal: { label: 'Normal', bg: '#DFF3DF', color: '#2E8B57' },
+};
+
+const StatusChip = ({ status }: { status?: string }) => {
+    const style = STATUS_STYLES[status || 'normal'] || STATUS_STYLES.normal;
+    return (
+        <Chip
+            label={style.label}
+            size="small"
+            sx={{
+                backgroundColor: style.bg,
+                color: style.color,
+                fontWeight: 500,
+                fontSize: 10,
+                borderRadius: '20px',
+                border: `1px solid ${style.color}20`,
+                height: 22,
+            }}
+        />
+    );
+};
 
 const InfoCard = ({
     value,
     label,
     unit,
+    status,
 }: {
     value: string | number;
     label: string;
     unit?: string;
+    status?: string;
 }) => {
     const key = String(label).toLowerCase();
     const { icon: Icon, iconBg, iconColor } = getSensorConfig(key);
@@ -145,7 +156,7 @@ const InfoCard = ({
             </Box>
 
             {/* Status */}
-            <StatusChip />
+            <StatusChip status={status} />
         </Box>
     );
 };
@@ -215,7 +226,7 @@ const SmallStatCard = ({ metric }: { metric: any }) => {
                         </Box>
                     </Box>
 
-                    <StatusChip />
+                    <StatusChip status={metric.status} />
                 </Box>
             </Box>
         </Grid>
@@ -362,12 +373,13 @@ export default function ViewDetail() {
 
     // count active devices 
 
-    const activeCounts = useMemo<{ onlineDevices: number, offlineDevices: number }>(() => {
-        if (!data) return { onlineDevices: 0, offlineDevices: 0 }
+    const activeCounts = useMemo<{ onlineDevices: number, offlineDevices: number, alertDevices: number }>(() => {
+        if (!data) return { onlineDevices: 0, offlineDevices: 0, alertDevices: 0 }
         const devices = data?.devices || []
         const onlineDevices = devices.filter((device: any) => device.status == "online")
         const offlineDevices = devices.filter((device: any) => device.status == "offline")
-        return { onlineDevices: onlineDevices.length, offlineDevices: offlineDevices.length }
+        const alertDevices = devices.filter((device: any) => (device.metrics || []).some((m: any) => m.status === "alert"))
+        return { onlineDevices: onlineDevices.length, offlineDevices: offlineDevices.length, alertDevices: alertDevices.length }
     }, [data, locationData])
 
 
@@ -574,18 +586,24 @@ export default function ViewDetail() {
                                         {data?.location_name || ""}
                                     </Typography>
 
-                                    <Chip label={data?.status || "active"}
-                                        size='small'
-                                        sx={{
-                                            textTransform: "capitalize",
-                                            borderRadius: '8px',
-                                            p: 0,
-                                            fontSize: 10,
-                                            backgroundColor: "#e9f5ef",
-                                            color: "#027700"
-
-
-                                        }} />
+                                    {/* A location can belong to more than one bucket at once
+                                        (e.g. one device alerting, another offline) - show a chip
+                                        per bucket that actually applies. */}
+                                    {(Array.isArray(data?.status) && data.status.length ? data.status : ["normal"]).map((s: string) => {
+                                        const style = STATUS_STYLES[s] || STATUS_STYLES.normal;
+                                        return (
+                                            <Chip key={s} label={style.label}
+                                                size='small'
+                                                sx={{
+                                                    textTransform: "capitalize",
+                                                    borderRadius: '8px',
+                                                    p: 0,
+                                                    fontSize: 10,
+                                                    backgroundColor: style.bg,
+                                                    color: style.color
+                                                }} />
+                                        );
+                                    })}
                                 </Box>
 
                                 {data?.description && (
@@ -660,6 +678,23 @@ export default function ViewDetail() {
                                     >
                                         {activeCounts.offlineDevices || 0} Inactive
                                     </Typography>
+
+                                    <Divider
+                                        orientation="vertical"
+                                        flexItem
+                                    />
+
+                                    <Typography
+                                        sx={{
+                                            fontSize: "8px",
+                                            color: "#b91c1c",
+                                            flex: 1,
+                                            textAlign: "center",
+
+                                        }}
+                                    >
+                                        {activeCounts.alertDevices || 0} Alert
+                                    </Typography>
                                 </Box>
 
                             </Box>
@@ -690,6 +725,7 @@ export default function ViewDetail() {
                                     value={metric.latest_value || 0}
                                     label={metric.metric_name || metric.metric_key}
                                     unit={metric.unit || ''}
+                                    status={metric.status}
                                 />
                             </Grid>
                         ))}

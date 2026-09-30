@@ -83,6 +83,14 @@ const STATUS_CONFIG: Record<
         borderColor: "#fecdd3",
         glowColor: "rgba(239, 68, 68, 0.12)",
     },
+    inactive: {
+        label: "Inactive",
+        chipBg: "#6b7280",
+        chipColor: "#fff",
+        cardBg: "linear-gradient(200deg, #f3f4f6 0%, #ffffff 70%)",
+        borderColor: "#e5e7eb",
+        glowColor: "rgba(107, 114, 128, 0.12)",
+    },
 };
 
 // ─── Metric 
@@ -179,7 +187,20 @@ export const FacilityCard: React.FC<any> = ({
         description,
         status } = data;
 
-    const cfg = STATUS_CONFIG[status?.length > 0 ? 'alert' : "normal"];
+    // A location can belong to more than one bucket at once (e.g. one device
+    // alerting, another offline) - status is a list, not one exclusive value.
+    const statusList: string[] = (Array.isArray(status) ? status : status ? [status] : []).length
+        ? (Array.isArray(status) ? status : [status])
+        : ["normal"];
+
+    // Card background follows whichever state is most severe; the chips below
+    // still show every state that actually applies.
+    const primaryStatus = statusList.includes("alert")
+        ? "alert"
+        : statusList.includes("inactive")
+        ? "inactive"
+        : "normal";
+    const cfg = STATUS_CONFIG[primaryStatus];
     const handleb = () => {
         onViewDetails(data?.location_id);
     };
@@ -256,22 +277,30 @@ export const FacilityCard: React.FC<any> = ({
                             </Box>
                         </Box>
 
-                        {/* Status Chip */}
-                        <Chip
-                            label={cfg?.label}
-                            size="small"
-                            sx={{
-                                bgcolor: cfg?.chipBg,
-                                color: cfg?.chipColor,
-                                fontWeight: 700,
-                                fontSize: "0.5rem",
-                                height: 22,
-                                borderRadius: 1.5,
-                                letterSpacing: 0.2,
-                                boxShadow: `0 2px 6px ${cfg?.glowColor}`,
-                                flexShrink: 0,
-                            }}
-                        />
+                        {/* Status Chips - one per bucket this location belongs to */}
+                        <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
+                            {statusList.map((s) => {
+                                const chipCfg = STATUS_CONFIG[s] || STATUS_CONFIG.normal;
+                                return (
+                                    <Chip
+                                        key={s}
+                                        label={chipCfg.label}
+                                        size="small"
+                                        sx={{
+                                            bgcolor: chipCfg.chipBg,
+                                            color: chipCfg.chipColor,
+                                            fontWeight: 700,
+                                            fontSize: "0.5rem",
+                                            height: 22,
+                                            borderRadius: 1.5,
+                                            letterSpacing: 0.2,
+                                            boxShadow: `0 2px 6px ${chipCfg.glowColor}`,
+                                            flexShrink: 0,
+                                        }}
+                                    />
+                                );
+                            })}
+                        </Box>
                     </Box>
 
                     {/* Metrics Row */}

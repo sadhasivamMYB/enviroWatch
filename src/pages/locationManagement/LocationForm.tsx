@@ -16,6 +16,14 @@ import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownR
 
 import { ApartmentOutlined } from "@mui/icons-material";
 
+export const DESCRIPTION_OPTIONS = [
+    "Admin",
+    "Tankfarm",
+    "Refinery",
+    "Utility",
+    "Warehouse",
+    "Packaging",
+];
 
 type LocationModalProps = {
     open: boolean;
@@ -49,13 +57,18 @@ const LocationFormModal: React.FC<LocationModalProps> = ({
 
     useEffect(() => {
         if (initialValues) {
-
-
             setFormData({
-                name: initialValues.name,
-                description: initialValues.description,
+                name: initialValues.name || "",
+                description: initialValues.description || "",
                 status: String(initialValues.is_active ?? ""),
-                code: initialValues.code
+                code: initialValues.code || ""
+            })
+        } else {
+            setFormData({
+                name: "",
+                description: "",
+                status: "",
+                code: ""
             })
         }
     }, [initialValues, open]);
@@ -200,18 +213,31 @@ const LocationFormModal: React.FC<LocationModalProps> = ({
                                 Description
                             </Typography>
 
-                            <TextField
-                                multiline
-                                fullWidth
-                                rows={2}
-                                sx={{ borderRadius: "10px" }}
-                                value={formData.description}
-                                onChange={(e) =>
-                                    handleChange("description", e.target.value)
-                                }
-
-
-                            />
+                            <FormControl sx={inputStyles} fullWidth>
+                                <Select
+                                    value={formData.description}
+                                    onChange={(e) =>
+                                        handleChange("description", e.target.value)
+                                    }
+                                    displayEmpty
+                                    IconComponent={KeyboardArrowDownRoundedIcon}
+                                    sx={inputStyles}
+                                >
+                                    <MenuItem value="" disabled sx={{ fontSize: 14, color: "#9CA3AF" }}>
+                                        Select Description
+                                    </MenuItem>
+                                    {DESCRIPTION_OPTIONS.map((option) => (
+                                        <MenuItem key={option} sx={{ fontSize: 14 }} value={option}>
+                                            {option}
+                                        </MenuItem>
+                                    ))}
+                                    {formData.description && !DESCRIPTION_OPTIONS.includes(formData.description) && (
+                                        <MenuItem sx={{ fontSize: 14 }} value={formData.description}>
+                                            {formData.description}
+                                        </MenuItem>
+                                    )}
+                                </Select>
+                            </FormControl>
                         </Box>
 
 

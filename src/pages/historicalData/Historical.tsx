@@ -1,6 +1,6 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, Tab, Tabs, TextField, Menu } from "@mui/material";
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, Tab, Tabs, TextField, Menu, Chip, Typography } from "@mui/material";
 import ParameterWise from "./ParameterWise";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { inputStyles } from "../../theme";
 import { KeyboardArrowDownOutlined } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
@@ -11,45 +11,6 @@ import { useGetLocationsQuery } from "../../services/Api/location.api";
 import { useGetDevicesQuery, useGetLocationIdDevicesQuery } from "../../services/Api/device.api";
 import { useGetLocationHistoryQuery } from "../../services/Api/historical";
 
-export const generateDeviceData = (deviceName: string, metric: string, pointsCount = 12) => {
-    let hash = 0;
-    for (let i = 0; i < deviceName.length; i++) {
-        hash = deviceName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const seed = Math.abs(hash);
-    const data = [];
-    const isTemp = metric.toLowerCase().includes("temp");
-    const base = isTemp ? 22 : 55;
-    const range = isTemp ? 8 : 15;
-    
-    for (let i = 0; i < pointsCount; i++) {
-        const wave = Math.sin((i + seed) * 0.5) * range;
-        const noise = ((seed * (i + 1)) % 10) / 5 - 1;
-        data.push(Math.round(base + wave + noise));
-    }
-    return data;
-};
-
-export const generateXAxisLabels = (fromStr: string, toStr: string) => {
-    if (!fromStr || !toStr) return [];
-    const fromDate = new Date(fromStr);
-    const toDate = new Date(toStr);
-    const diffTime = toDate.getTime() - fromDate.getTime();
-    
-    const labels = [];
-    const pointsCount = 12;
-    for (let i = 0; i < pointsCount; i++) {
-        const currentMs = fromDate.getTime() + (diffTime * (i / (pointsCount - 1)));
-        const currDate = new Date(currentMs);
-        const dayPart = currDate.getDate();
-        const monthPart = currDate.getMonth() + 1;
-        const hours = String(currDate.getHours()).padStart(2, "0");
-        const mins = String(currDate.getMinutes()).padStart(2, "0");
-        labels.push(`${dayPart}/${monthPart}\n${hours}:${mins}`);
-    }
-    return labels;
-};
-
 const getLocalDateString = (d = new Date()) => {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -57,12 +18,18 @@ const getLocalDateString = (d = new Date()) => {
     return `${year}-${month}-${day}`;
 };
 
+type PresetOption = "1D" | "1W" | "1M" | "1Y" | "Custom";
+
 const Historical = () => {
     const [location, setLocation] = useState<string>("");
     const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
-    const [from, setFrom] = useState(getLocalDateString(new Date(Date.now() - 86400000))); // default to yesterday
-    const [to, setTo] = useState(getLocalDateString()); // default to today
-    const [parameter, setParameter] = useState("");
+    
+    // Preset state: default to 1D
+    const [preset, setPreset] = useState<PresetOption>("1D");
+    const [from, setFrom] = useState(getLocalDateString(new Date(Date.now() - 86400000)));
+    const [to, setTo] = useState(getLocalDateString());
+    
+    const [parameter, setParameter] = useState("Temperature");
     const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
     const [mainTab, setMainTab] = useState(0);
 
@@ -70,15 +37,41 @@ const Historical = () => {
     const { data: allDevices } = useGetDevicesQuery();
     const { data: device } = useGetLocationIdDevicesQuery({ location_id: location }, { skip: !location });
 
+    // Auto-select first location when locations load
+    useEffect(() => {
+        if (locations?.locations?.length && !location) {
+            setLocation(locations.locations[0].id);
+        }
+    }, [locations]);
+
+    // Calculate aggregation interval based on preset & custom range
+    const getInterval = () => {
+        if (preset === "1D" || preset === "1W") return "raw";
+        if (preset === "1M") return "1 hour";
+        if (preset === "1Y") return "1 day";
+        
+        // Custom range aggregation logic:
+        if (!from || !to) return "raw";
+        const d1 = new Date(from);
+        const d2 = new Date(to);
+        const diffDays = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
+        if (diffDays <= 7) return "raw";
+        if (diffDays <= 60) return "1 hour";
+        return "1 day";
+    };
+
+    const currentInterval = getInterval();
+
+    // Trigger API queries with current interval
     const { data: locationHistoryData, isFetching: isFetchingHistory } = useGetLocationHistoryQuery(
-        { location_id: location, from_date: from, to_date: to },
+        { location_id: location, from_date: from, to_date: to, interval: currentInterval },
         { skip: !location || mainTab !== 0 }
     );
 
-    const histRes1 = useGetLocationHistoryQuery({ location_id: selectedLocation[0], from_date: from, to_date: to }, { skip: selectedLocation.length < 1 || mainTab !== 1 });
-    const histRes2 = useGetLocationHistoryQuery({ location_id: selectedLocation[1], from_date: from, to_date: to }, { skip: selectedLocation.length < 2 || mainTab !== 1 });
-    const histRes3 = useGetLocationHistoryQuery({ location_id: selectedLocation[2], from_date: from, to_date: to }, { skip: selectedLocation.length < 3 || mainTab !== 1 });
-    const histRes4 = useGetLocationHistoryQuery({ location_id: selectedLocation[3], from_date: from, to_date: to }, { skip: selectedLocation.length < 4 || mainTab !== 1 });
+    const histRes1 = useGetLocationHistoryQuery({ location_id: selectedLocation[0], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 1 || mainTab !== 1 });
+    const histRes2 = useGetLocationHistoryQuery({ location_id: selectedLocation[1], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 2 || mainTab !== 1 });
+    const histRes3 = useGetLocationHistoryQuery({ location_id: selectedLocation[2], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 3 || mainTab !== 1 });
+    const histRes4 = useGetLocationHistoryQuery({ location_id: selectedLocation[3], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 4 || mainTab !== 1 });
 
     const parameterHistoryData = [
         ...(histRes1.data || []),
@@ -90,35 +83,68 @@ const Historical = () => {
 
     const LocationsData = locations?.locations;
 
-    const getOffsetDate = (dateStr: string, offsetDays: number) => {
-        if (!dateStr) return "";
-        const date = new Date(dateStr);
-        date.setDate(date.getDate() + offsetDays);
-        return date.toISOString().split("T")[0];
+    // Handle preset clicks (1D, 1W, 1M, 1Y, Custom)
+    const handlePresetSelect = (newPreset: PresetOption) => {
+        setPreset(newPreset);
+        const now = new Date();
+        const todayStr = getLocalDateString(now);
+
+        if (newPreset === "1D") {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 1);
+            setFrom(getLocalDateString(d));
+            setTo(todayStr);
+        } else if (newPreset === "1W") {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 7);
+            setFrom(getLocalDateString(d));
+            setTo(todayStr);
+        } else if (newPreset === "1M") {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 30);
+            setFrom(getLocalDateString(d));
+            setTo(todayStr);
+        } else if (newPreset === "1Y") {
+            const d = new Date(now);
+            d.setDate(d.getDate() - 365);
+            setFrom(getLocalDateString(d));
+            setTo(todayStr);
+        }
     };
+
+    // Max allowed range for custom range is 6 months (180 days)
+    const MAX_RANGE_DAYS = 180;
 
     const handleFromChange = (newFrom: string) => {
         setFrom(newFrom);
-        if (newFrom) {
-            const fromDate = new Date(newFrom);
-            const toDate = new Date(to);
-            const diffTime = toDate.getTime() - fromDate.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays < 0 || diffDays > 2) {
-                setTo(getOffsetDate(newFrom, 2));
+        if (newFrom && to) {
+            const fDate = new Date(newFrom);
+            const tDate = new Date(to);
+            const diffDays = Math.ceil((tDate.getTime() - fDate.getTime()) / (1000 * 3600 * 24));
+            
+            if (diffDays < 0) {
+                setTo(newFrom);
+            } else if (diffDays > MAX_RANGE_DAYS) {
+                const maxTo = new Date(fDate);
+                maxTo.setDate(maxTo.getDate() + MAX_RANGE_DAYS);
+                setTo(getLocalDateString(maxTo));
             }
         }
     };
 
     const handleToChange = (newTo: string) => {
         setTo(newTo);
-        if (newTo) {
-            const toDate = new Date(newTo);
-            const fromDate = new Date(from);
-            const diffTime = toDate.getTime() - fromDate.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays < 0 || diffDays > 2) {
-                setFrom(getOffsetDate(newTo, -2));
+        if (newTo && from) {
+            const fDate = new Date(from);
+            const tDate = new Date(newTo);
+            const diffDays = Math.ceil((tDate.getTime() - fDate.getTime()) / (1000 * 3600 * 24));
+
+            if (diffDays < 0) {
+                setFrom(newTo);
+            } else if (diffDays > MAX_RANGE_DAYS) {
+                const minFrom = new Date(tDate);
+                minFrom.setDate(minFrom.getDate() - MAX_RANGE_DAYS);
+                setFrom(getLocalDateString(minFrom));
             }
         }
     };
@@ -131,48 +157,55 @@ const Historical = () => {
         setExportAnchorEl(null);
     };
 
+    // Column-wise Pivot Export logic
     const handleExport = (type: "excel" | "pdf") => {
         handleExportClose();
-        let headers = "";
-        let rows: string[] = [];
 
-        if (mainTab === 0) {
-            if (!location) {
-                alert("Please select a location before exporting.");
-                return;
-            }
-            headers = "Timestamp,Location,Device,Metric,Value\n";
-
-            const records = locationHistoryData || [];
-            records.forEach((rec: any) => {
-                const dev = device?.devices?.find((d: any) => String(d.device_uid) === String(rec.device_uid) || String(d.id) === String(rec.device_uid));
-                const devName = dev?.name || rec.device_uid;
-                
-                const timeStr = rec.time ? rec.time.replace("T", " ") : "";
-                rows.push(`"${timeStr}","${rec.location_name}","${devName}","${rec.metric_key}",${rec.value}`);
-            });
-        } else {
-            if (selectedLocation.length === 0 || !parameter) {
-                alert("Please select locations and a parameter before exporting.");
-                return;
-            }
-            headers = "Timestamp,Location,Device,Parameter,Value\n";
-
-            const records = parameterHistoryData || [];
-            records.forEach((rec: any) => {
-                const devicesList = Array.isArray(allDevices) ? allDevices : (allDevices?.devices || []);
-                const dev = devicesList.find((d: any) => String(d.device_uid) === String(rec.device_uid) || String(d.id) === String(rec.device_uid));
-                const devName = dev?.name || rec.device_uid;
-                
-                const timeStr = rec.time ? rec.time.replace("T", " ") : "";
-                rows.push(`"${timeStr}","${rec.location_name}","${devName}","${rec.metric_key}",${rec.value}`);
-            });
+        const records = mainTab === 0 ? (locationHistoryData || []) : (parameterHistoryData || []);
+        if (!records || records.length === 0) {
+            alert("No data available to export for the selected date range.");
+            return;
         }
 
-        const content = headers + rows.join("\n");
+        // Discover distinct metrics
+        const metricsList: string[] = Array.from(new Set(records.map((r: any) => r.metric_key))).filter(Boolean) as string[];
+
+        // Group rows by Timestamp + Location + Device
+        const rowMap: Record<string, { time: string; location: string; device: string; values: Record<string, any> }> = {};
+
+        records.forEach((rec: any) => {
+            const devList = mainTab === 0 
+                ? (device?.devices || []) 
+                : (Array.isArray(allDevices) ? allDevices : (allDevices?.devices || []));
+            const dev = devList.find((d: any) => String(d.device_uid) === String(rec.device_uid) || String(d.id) === String(rec.device_uid));
+            const devName = dev?.name || rec.device_uid;
+            const timeStr = rec.time ? rec.time.replace("T", " ") : "";
+            const key = `${timeStr}__${rec.location_name}__${devName}`;
+
+            if (!rowMap[key]) {
+                rowMap[key] = {
+                    time: timeStr,
+                    location: rec.location_name || "",
+                    device: devName,
+                    values: {}
+                };
+            }
+            rowMap[key].values[rec.metric_key] = rec.value != null ? Number(rec.value).toFixed(2) : "-";
+        });
+
+        const pivotedRows = Object.values(rowMap);
+
+        const headers = ["Timestamp", "Location", "Device", ...metricsList];
+        const csvHeaderStr = headers.map(h => `"${h}"`).join(",") + "\n";
+        const csvRowStrs = pivotedRows.map(row => {
+            const valCols = metricsList.map(m => row.values[m] !== undefined ? `"${row.values[m]}"` : '"-"');
+            return [`"${row.time}"`, `"${row.location}"`, `"${row.device}"`, ...valCols].join(",");
+        });
+
+        const csvContent = csvHeaderStr + csvRowStrs.join("\n");
 
         if (type === "excel") {
-            const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
@@ -183,15 +216,15 @@ const Historical = () => {
         } else {
             const printWindow = window.open("", "_blank");
             if (printWindow) {
-                const tableRowsHtml = rows.map(row => {
-                    const columns = row.split(",").map(col => col.replace(/^"|"$/g, ""));
+                const headerHtml = headers.map(h => `<th>${h}</th>`).join("");
+                const tableRowsHtml = pivotedRows.map(row => {
+                    const valTds = metricsList.map(m => `<td>${row.values[m] !== undefined ? row.values[m] : "-"}</td>`).join("");
                     return `
                         <tr>
-                            <td>${columns[0]}</td>
-                            <td>${columns[1]}</td>
-                            <td>${columns[2]}</td>
-                            <td>${columns[3]}</td>
-                            <td>${columns[4]}</td>
+                            <td>${row.time}</td>
+                            <td>${row.location}</td>
+                            <td>${row.device}</td>
+                            ${valTds}
                         </tr>
                     `;
                 }).join("");
@@ -205,61 +238,16 @@ const Historical = () => {
                         <head>
                             <title>EnviroWatch Historical Report</title>
                             <style>
-                                body {
-                                    font-family: 'Inter', system-ui, sans-serif;
-                                    color: #111827;
-                                    padding: 40px;
-                                    margin: 0;
-                                }
-                                .header {
-                                    border-bottom: 2px solid #007A70;
-                                    padding-bottom: 20px;
-                                    margin-bottom: 30px;
-                                }
-                                .logo {
-                                    font-size: 24px;
-                                    font-weight: 700;
-                                    color: #007A70;
-                                    margin-bottom: 10px;
-                                }
-                                .title {
-                                    font-size: 20px;
-                                    font-weight: 600;
-                                    color: #374151;
-                                    margin-bottom: 5px;
-                                }
-                                .meta {
-                                    font-size: 13px;
-                                    color: #6b7280;
-                                }
-                                table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                    margin-top: 20px;
-                                }
-                                th {
-                                    background-color: #f3f4f6;
-                                    color: #374151;
-                                    font-weight: 600;
-                                    text-align: left;
-                                    font-size: 12px;
-                                    padding: 12px 16px;
-                                    border-bottom: 1px solid #e5e7eb;
-                                }
-                                td {
-                                    padding: 12px 16px;
-                                    font-size: 13px;
-                                    border-bottom: 1px solid #f3f4f6;
-                                    color: #4b5563;
-                                }
-                                tr:nth-child(even) td {
-                                    background-color: #fafafa;
-                                }
-                                @media print {
-                                    body {
-                                        padding: 20px;
-                                    }
-                                }
+                                body { font-family: 'Inter', system-ui, sans-serif; color: #111827; padding: 40px; margin: 0; }
+                                .header { border-bottom: 2px solid #007A70; padding-bottom: 20px; margin-bottom: 30px; }
+                                .logo { font-size: 24px; font-weight: 700; color: #007A70; margin-bottom: 10px; }
+                                .title { font-size: 20px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+                                .meta { font-size: 13px; color: #6b7280; }
+                                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                                th { background-color: #f3f4f6; color: #374151; font-weight: 600; text-align: left; font-size: 12px; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
+                                td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+                                tr:nth-child(even) td { background-color: #fafafa; }
+                                @media print { body { padding: 20px; } }
                             </style>
                         </head>
                         <body>
@@ -268,27 +256,18 @@ const Historical = () => {
                                 <div class="title">${titleText}</div>
                                 <div class="meta">
                                     <strong>Date Range:</strong> ${from} to ${to} &nbsp;|&nbsp; 
+                                    <strong>View Mode:</strong> ${preset} (${currentInterval}) &nbsp;|&nbsp; 
                                     <strong>Exported on:</strong> ${new Date().toLocaleDateString()}
                                 </div>
                             </div>
                             <table>
                                 <thead>
-                                    <tr>
-                                        <th>Timestamp</th>
-                                        <th>Location</th>
-                                        <th>Device</th>
-                                        <th>${mainTab === 0 ? "Metric" : "Parameter"}</th>
-                                        <th>Value</th>
-                                    </tr>
+                                    <tr>${headerHtml}</tr>
                                 </thead>
-                                <tbody>
-                                    ${tableRowsHtml}
-                                </tbody>
+                                <tbody>${tableRowsHtml}</tbody>
                             </table>
                             <script>
-                                window.onload = function() {
-                                    window.print();
-                                };
+                                window.onload = function() { window.print(); };
                             </script>
                         </body>
                     </html>
@@ -350,17 +329,52 @@ const Historical = () => {
                                 <Select sx={inputStyles} value={parameter} label="Parameter" onChange={(e: any) => setParameter(e.target.value)}>
                                     <MenuItem sx={{ fontSize: "13px" }} value="Temperature">Temperature</MenuItem>
                                     <MenuItem sx={{ fontSize: "13px" }} value="Humidity">Humidity</MenuItem>
+                                    <MenuItem sx={{ fontSize: "13px" }} value="CO2">CO2</MenuItem>
+                                    <MenuItem sx={{ fontSize: "13px" }} value="Light">Light</MenuItem>
+                                    <MenuItem sx={{ fontSize: "13px" }} value="Oxygen">Oxygen</MenuItem>
                                 </Select>
                             </FormControl>
                         </>
                     )}
 
+                    {/* Preset Buttons (1D, 1W, 1M, 1Y, Custom) */}
+                    <Box sx={{ display: "flex", gap: 0.5, border: "1px solid #e5e7eb", borderRadius: "10px", p: "3px", bgcolor: "#f9fafb" }}>
+                        {(["1D", "1W", "1M", "1Y", "Custom"] as PresetOption[]).map((p) => {
+                            const isSelected = preset === p;
+                            return (
+                                <Chip
+                                    key={p}
+                                    label={p}
+                                    clickable
+                                    onClick={() => handlePresetSelect(p)}
+                                    sx={{
+                                        fontSize: "12px",
+                                        fontWeight: 600,
+                                        height: "28px",
+                                        borderRadius: "7px",
+                                        backgroundColor: isSelected ? "#00A395" : "transparent",
+                                        color: isSelected ? "#fff" : "#4b5563",
+                                        "&:hover": {
+                                            backgroundColor: isSelected ? "#007A70" : "#e5e7eb",
+                                        },
+                                    }}
+                                />
+                            );
+                        })}
+                    </Box>
+
+                    {/* From & To Calendar Fields: ENABLED ONLY when preset === "Custom" */}
                     <TextField
                         type="date"
                         label="From"
                         value={from}
+                        disabled={preset !== "Custom"}
                         onChange={(e) => handleFromChange(e.target.value)}
-                        sx={{ ...inputStyles, minWidth: 160 }}
+                        sx={{
+                            ...inputStyles,
+                            minWidth: 150,
+                            opacity: preset !== "Custom" ? 0.75 : 1,
+                        }}
                         slotProps={{
                             inputLabel: { shrink: true },
                             htmlInput: { max: to }
@@ -370,14 +384,16 @@ const Historical = () => {
                         type="date"
                         label="To"
                         value={to}
+                        disabled={preset !== "Custom"}
                         onChange={(e) => handleToChange(e.target.value)}
-                        sx={{ ...inputStyles, minWidth: 160 }}
+                        sx={{
+                            ...inputStyles,
+                            minWidth: 150,
+                            opacity: preset !== "Custom" ? 0.75 : 1,
+                        }}
                         slotProps={{
                             inputLabel: { shrink: true },
-                            htmlInput: {
-                                min: from,
-                                max: getOffsetDate(from, 2)
-                            }
+                            htmlInput: { min: from }
                         }}
                     />
                 </Box>
@@ -408,8 +424,6 @@ const Historical = () => {
             </Box>
         );
     };
-
-
 
     const activeLocationName = LocationsData?.find((l: any) => String(l.id) === String(location))?.name || "";
     const activeLocationDevices = device?.devices || [];

@@ -21,7 +21,8 @@ export const alertsApi = createApi({
         // GET - Active Alert Rule
         getActiveAlerts: builder.query<any, void>({
             query: () => "/alerts/active",
-            providesTags: ["alerts"]
+            providesTags: ["alerts"],
+            refetchOnMountOrArgChange: true
         }),
 
         // POST - ADD Alert Rule

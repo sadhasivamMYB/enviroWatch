@@ -17,13 +17,12 @@ import {
 import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import { inputStyles } from '../../theme';
 import { useGetLocationsQuery } from '../../services/Api/location.api';
 import { useGetLocationIdDevicesQuery } from '../../services/Api/device.api';
 
-
 export default function AddRuleDialog({ open, onclose, isEdit, initialValues, onsubmit, isLoading = false }: any) {
-
     const [location, setLocation] = useState('');
     const [device, setDevice] = useState<number | null>(null);
     const [ruleName, setRuleName] = useState<string>("");
@@ -32,16 +31,16 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
     const [selectedSensorValue, setSelectedSensorValue] = useState<any>(null);
     const [minValue, setMinValue] = useState<number>(15);
     const [maxValue, setMaxValue] = useState<number>(26);
+    const [durationMinutes, setDurationMinutes] = useState<number>(0);
+    const [startTime, setStartTime] = useState<string>("00:00");
+    const [endTime, setEndTime] = useState<string>("23:59");
     const [status, setStatus] = useState("Active");
 
-    const { data: locations } = useGetLocationsQuery({})
-    const { data: devices } = useGetLocationIdDevicesQuery({ location_id: location })
-    // const { data: mertics } = useGetDeviceIdByMetricsQuery({ device_id: device })
+    const { data: locations } = useGetLocationsQuery({});
+    const { data: devices } = useGetLocationIdDevicesQuery({ location_id: location }, { skip: !location });
 
-
-    const LocationsData = locations?.locations
-    const DeviceData = devices?.devices
-
+    const LocationsData = locations?.locations;
+    const DeviceData = devices?.devices;
 
     useEffect(() => {
         if (open && isEdit && initialValues) {
@@ -51,6 +50,9 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
             setRuleName(initialValues.rule_name || "");
             setMinValue(initialValues.min_value || 15);
             setMaxValue(initialValues.max_value || 26);
+            setDurationMinutes(initialValues.duration_minutes ?? 0);
+            setStartTime(initialValues.start_time || "00:00");
+            setEndTime(initialValues.end_time || "23:59");
             setStatus(initialValues.is_active ? "Active" : "Inactive");
         } else if (open && !isEdit) {
             setLocation('');
@@ -61,10 +63,12 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
             setSelectedSensorValue(null);
             setMinValue(15);
             setMaxValue(26);
+            setDurationMinutes(0);
+            setStartTime("00:00");
+            setEndTime("23:59");
             setStatus("Active");
         }
-    }, [open, isEdit, initialValues])
-
+    }, [open, isEdit, initialValues]);
 
     const handleSubmit = () => {
         if (isEdit) {
@@ -73,6 +77,9 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                 rule_name: ruleName,
                 min_value: Number(minValue),
                 max_value: Number(maxValue),
+                duration_minutes: Number(durationMinutes),
+                start_time: startTime,
+                end_time: endTime,
                 is_active: status === "Active",
             };
             onsubmit(payload);
@@ -82,32 +89,30 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                 rule_name: ruleName,
                 min_value: Number(minValue),
                 max_value: Number(maxValue),
+                duration_minutes: Number(durationMinutes),
+                start_time: startTime,
+                end_time: endTime,
                 severity: "medium",
             };
             onsubmit(payload);
         }
 
-        onclose()
-    }
+        onclose();
+    };
 
     return (
         <Dialog
             open={open}
             onClose={onclose}
             maxWidth="md"
-
-
-
         >
-            <DialogContent sx={{ px: 3, py: 3, width: "550px" }}>
-
+            <DialogContent sx={{ px: 3, py: 3, width: "580px" }}>
                 {/* Header */}
                 <Box
                     sx={{
                         display: "flex",
                         gap: 1.3,
                         mb: 2,
-
                     }}
                 >
                     <Box
@@ -128,7 +133,6 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                     <Box>
                         <Typography
                             sx={{
-                                variant: "h3",
                                 fontWeight: 500,
                                 color: "#111827",
                                 fontSize: 18
@@ -139,12 +143,11 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
 
                         <Typography
                             sx={{
-                                variant: "body1",
                                 color: "#6B7280",
                                 fontSize: 12
                             }}
                         >
-                            {isEdit ? "Edit this rule" : "Set the acceptable range for Device readings"}
+                            {isEdit ? "Edit this rule" : "Set acceptable thresholds and continuous alarm duration provisions"}
                         </Typography>
                     </Box>
                 </Box>
@@ -157,11 +160,9 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                         p: 2,
                     }}
                 >
-                    <Stack spacing={3}>
+                    <Stack spacing={2.5}>
                         <Stack direction="row" spacing={2.5}>
-
                             <FormControl fullWidth sx={inputStyles}>
-
                                 <TextField
                                     value={ruleName}
                                     onChange={(e) => setRuleName(e.target.value)}
@@ -190,17 +191,13 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                     sx={selectStyles}
                                     disabled={isEdit}
                                 >
-                                    {
-                                        LocationsData?.map((item: any) => (
-                                            <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.id}>
-                                                {item.name}
-                                            </MenuItem>
-                                        ))
-                                    }
+                                    {LocationsData?.map((item: any) => (
+                                        <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.id}>
+                                            {item.name}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
-
-
                         </Stack>
 
                         <Stack direction="row" spacing={2.5}>
@@ -213,17 +210,14 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                     sx={selectStyles}
                                     disabled={isEdit}
                                 >
-
-                                    {
-                                        DeviceData?.map((item: any) => (
-                                            <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.id} onClick={() => setSensor(item.sensors)}>
-                                                {item.name}
-                                            </MenuItem>
-                                        ))
-                                    }
-
+                                    {DeviceData?.map((item: any) => (
+                                        <MenuItem style={{ fontSize: "12px" }} key={item.id} value={item.id} onClick={() => setSensor(item.sensors)}>
+                                            {item.name}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
+
                             <FormControl fullWidth sx={inputStyles}>
                                 <InputLabel>Sensor</InputLabel>
                                 <Select
@@ -246,15 +240,15 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                             </FormControl>
                         </Stack>
 
+                        {/* Threshold Range */}
                         <Paper
                             variant="outlined"
                             sx={{
-                                borderRadius: '22px',
+                                borderRadius: '20px',
                                 borderColor: '#E5E5E5',
                                 p: 2.5,
                             }}
                         >
-                            {/* Header */}
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -272,144 +266,36 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                 >
                                     Threshold Range
                                 </Typography>
-
-                                <InfoOutlinedIcon
-                                    sx={{
-                                        color: '#8A8A8A',
-                                        fontSize: 14,
-                                    }}
-                                />
+                                <InfoOutlinedIcon sx={{ color: '#8A8A8A', fontSize: 14 }} />
                             </Box>
 
-                            {/* Range Bar */}
-                            <Box
-                                sx={{
-                                    position: 'relative',
-                                    px: 2,
-                                    mb: 7,
-                                }}
-                            >
-                                {/* Bar */}
+                            <Box sx={{ position: 'relative', px: 2, mb: 7 }}>
                                 <Box
                                     sx={{
                                         height: 4,
                                         borderRadius: 999,
-                                        background:
-                                            'linear-gradient(to right, #0057FF 0%, #0057FF 15%, #16A516 35%, #16A516 65%, #F00000 80%, #F00000 100%)',
+                                        background: 'linear-gradient(to right, #0057FF 0%, #0057FF 15%, #16A516 35%, #16A516 65%, #F00000 80%, #F00000 100%)',
                                     }}
                                 />
-
-                                {/* Labels */}
-                                <Typography
-                                    sx={{
-                                        position: 'absolute',
-                                        top: -24,
-                                        left: '10%',
-                                        transform: 'translateX(-50%)',
-                                        color: '#0057FF',
-                                        fontWeight: 500,
-                                        fontSize: 12,
-                                    }}
-                                >
+                                <Typography sx={{ position: 'absolute', top: -24, left: '10%', transform: 'translateX(-50%)', color: '#0057FF', fontWeight: 500, fontSize: 12 }}>
                                     Below Min
                                 </Typography>
-
-                                <Typography
-                                    sx={{
-                                        position: 'absolute',
-                                        top: -24,
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        color: '#158F15',
-                                        fontWeight: 500,
-                                        fontSize: 12,
-                                    }}
-                                >
+                                <Typography sx={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', color: '#158F15', fontWeight: 500, fontSize: 12 }}>
                                     Normal Range
                                 </Typography>
-
-                                <Typography
-                                    sx={{
-                                        position: 'absolute',
-                                        top: -24,
-                                        left: '82%',
-
-                                        color: '#F00000',
-                                        fontWeight: 500,
-                                        fontSize: 12,
-                                    }}
-                                >
+                                <Typography sx={{ position: 'absolute', top: -24, left: '82%', color: '#F00000', fontWeight: 500, fontSize: 12 }}>
                                     Above Max
                                 </Typography>
-
-                                {/* Blue Dot */}
-                                <Box
-                                    sx={{
-                                        position: 'absolute',
-                                        left: '23%',
-                                        top: -6,
-                                        width: 16,
-                                        height: 16,
-                                        borderRadius: '50%',
-                                        bgcolor: '#0057FF',
-                                        transform: 'translateX(-50%)',
-                                        zIndex: 2,
-                                    }}
-                                />
-
-                                {/* Red Dot */}
-                                <Box
-                                    sx={{
-                                        position: 'absolute',
-                                        left: '73%',
-                                        top: -6,
-                                        width: 16,
-                                        height: 16,
-                                        borderRadius: '50%',
-                                        bgcolor: '#F00000',
-                                        transform: 'translateX(-50%)',
-                                        zIndex: 2,
-                                    }}
-                                />
+                                <Box sx={{ position: 'absolute', left: '23%', top: -6, width: 16, height: 16, borderRadius: '50%', bgcolor: '#0057FF', transform: 'translateX(-50%)', zIndex: 2 }} />
+                                <Box sx={{ position: 'absolute', left: '73%', top: -6, width: 16, height: 16, borderRadius: '50%', bgcolor: '#F00000', transform: 'translateX(-50%)', zIndex: 2 }} />
                             </Box>
 
-                            {/* Bottom Section */}
-                            <Box
-                                sx={{
-
-
-                                    alignItems: 'start',
-                                    display: "flex",
-                                    flexDirection: "row",
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                }}
-                            >
-                                {/* Min */}
+                            <Box sx={{ alignItems: 'start', display: "flex", flexDirection: "row", justifyContent: "space-between", width: "100%" }}>
                                 <Box sx={{ position: 'relative', width: "200px" }}>
-                                    {/* Dashed Line */}
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            right: 33,
-                                            top: -60,
-                                            height: 92,
-                                            borderRight: '2px dashed #0057FF',
-                                        }}
-                                    />
-
-                                    <Typography
-                                        sx={{
-                                            fontSize: 12,
-                                            fontWeight: 600,
-                                            color: '#343434',
-                                            mb: 1,
-                                            mt: -4
-                                        }}
-                                    >
+                                    <Box sx={{ position: 'absolute', right: 33, top: -60, height: 92, borderRight: '2px dashed #0057FF' }} />
+                                    <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#343434', mb: 1, mt: -4 }}>
                                         Min
                                     </Typography>
-
                                     <TextField
                                         fullWidth
                                         type="number"
@@ -426,67 +312,20 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                                     />
                                 </Box>
 
-                                {/* Center Text */}
-                                <Box
-                                    sx={{
-
-                                        mt: -3,
-                                        width: "200px",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-
-
-
-                                    }}
-                                >
-                                    <Typography
-                                        sx={{
-
-                                            textWrap: "balance",
-                                            color: '#5E5E5E',
-                                            fontSize: 11,
-                                            lineHeight: 1.5,
-
-                                        }}
-                                    >
-                                        Alerts will be triggered when
-                                        <br />
-                                        readings are outside this range.
+                                <Box sx={{ mt: -3, width: "200px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                                    <Typography sx={{ color: '#5E5E5E', fontSize: 11, lineHeight: 1.5, textAlign: "center" }}>
+                                        Alerts will be triggered when readings are outside this range.
                                     </Typography>
                                 </Box>
 
-                                {/* Max */}
                                 <Box sx={{ position: 'relative' }}>
-                                    {/* Dashed Line */}
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            left: 59,
-                                            top: -60,
-                                            height: 92,
-                                            borderLeft: '2px dashed #F00000',
-                                        }}
-                                    />
-
-                                    <Typography
-                                        sx={{
-                                            fontSize: 12,
-                                            fontWeight: 600,
-                                            color: '#343434',
-                                            mb: 1,
-                                            mt: -4,
-                                            ml: 10
-                                        }}
-                                    >
+                                    <Box sx={{ position: 'absolute', left: 59, top: -60, height: 92, borderLeft: '2px dashed #F00000' }} />
+                                    <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#343434', mb: 1, mt: -4, ml: 10 }}>
                                         Max
                                     </Typography>
-
                                     <TextField
                                         fullWidth
                                         type="number"
-
                                         value={maxValue}
                                         onChange={(e) => setMaxValue(Number(e.target.value))}
                                         sx={{
@@ -503,49 +342,121 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                             </Box>
                         </Paper>
 
+                        {/* Continuous Alarm & Time Window Provisions */}
+                        <Paper
+                            variant="outlined"
+                            sx={{
+                                borderRadius: '20px',
+                                borderColor: '#E5E5E5',
+                                p: 2.5,
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                <AccessTimeRoundedIcon sx={{ color: '#00796B', fontSize: 18 }} />
+                                <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>
+                                    Alarm Duration & Operating Window Provisions
+                                </Typography>
+                            </Box>
+
+                            <Stack spacing={2}>
+                                {/* Continuous Duration */}
+                                <Box>
+                                    <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#4B5563', mb: 0.5 }}>
+                                        Continuous Violation Duration (Minutes)
+                                    </Typography>
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        value={durationMinutes}
+                                        onChange={(e) => setDurationMinutes(Math.max(0, Number(e.target.value)))}
+                                        placeholder="0 for immediate trigger"
+                                        helperText="Triggers alarm only when parameter crosses threshold continuously for this duration (0 = immediate)"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                height: 40,
+                                                borderRadius: '10px',
+                                                fontSize: 13,
+                                            },
+                                            '& .MuiFormHelperText-root': {
+                                                fontSize: 11,
+                                                color: '#6B7280',
+                                            }
+                                        }}
+                                    />
+                                </Box>
+
+                                {/* Active Operating Window */}
+                                <Box>
+                                    <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#4B5563', mb: 0.5 }}>
+                                        Operating Hours Window (Start & End Time)
+                                    </Typography>
+                                    <Stack direction="row" spacing={2}>
+                                        <TextField
+                                            type="time"
+                                            label="Start Time"
+                                            value={startTime}
+                                            onChange={(e) => setStartTime(e.target.value)}
+                                            fullWidth
+                                            slotProps={{
+                                                inputLabel: { shrink: true }
+                                            }}
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    height: 40,
+                                                    borderRadius: '10px',
+                                                    fontSize: 13,
+                                                }
+                                            }}
+                                        />
+                                        <TextField
+                                            type="time"
+                                            label="End Time"
+                                            value={endTime}
+                                            onChange={(e) => setEndTime(e.target.value)}
+                                            fullWidth
+                                            slotProps={{
+                                                inputLabel: { shrink: true }
+                                            }}
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    height: 40,
+                                                    borderRadius: '10px',
+                                                    fontSize: 13,
+                                                }
+                                            }}
+                                        />
+                                    </Stack>
+                                </Box>
+                            </Stack>
+                        </Paper>
+
+                        {/* Status (Edit Mode) */}
+                        {isEdit && (
+                            <Box>
+                                <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#4B5563" }}>
+                                    Status
+                                </Typography>
+                                <FormControl sx={inputStyles} fullWidth>
+                                    <Select
+                                        value={status}
+                                        onChange={(e) => setStatus(e.target.value)}
+                                        IconComponent={KeyboardArrowDownRoundedIcon}
+                                        sx={inputStyles}
+                                    >
+                                        <MenuItem sx={{ fontSize: 14 }} value="Active">
+                                            Active
+                                        </MenuItem>
+                                        <MenuItem sx={{ fontSize: 14 }} value="Inactive">
+                                            Inactive
+                                        </MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Box>
+                        )}
                     </Stack>
-                    {/* Status */}
-                    {
-                        isEdit &&
-                        <Box>
-
-                            <Typography
-                                sx={{
-                                    fontSize: 14,
-                                    fontWeight: 500,
-                                    color: "#4B5563"
-
-                                }}
-                            >
-                                Status
-                            </Typography>
-
-                            <FormControl sx={inputStyles} fullWidth>
-                                <Select
-                                    value={status}
-                                    onChange={(e) =>
-                                        setStatus(e.target.value)
-                                    }
-                                    IconComponent={
-                                        KeyboardArrowDownRoundedIcon
-                                    }
-                                    sx={inputStyles}
-                                >
-                                    <MenuItem sx={{ fontSize: 14, }} value="Active">
-                                        Active
-                                    </MenuItem>
-                                    <MenuItem sx={{ fontSize: 14, }} value="Inactive">
-                                        Inactive
-                                    </MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Box>
-                    }
                 </Paper>
 
-
-
-                {/* Buttons */}
+                {/* Footer Buttons */}
                 <Box
                     sx={{
                         mt: 2,
@@ -561,7 +472,6 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
-
                             fontSize: "14px",
                             borderColor: "#D1D5DB",
                             color: "#374151",
@@ -577,7 +487,6 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                         sx={{
                             textTransform: "none",
                             borderRadius: "10px",
-
                             fontSize: "14px",
                             backgroundColor: "#00796B",
                             boxShadow: "none",
@@ -589,12 +498,9 @@ export default function AddRuleDialog({ open, onclose, isEdit, initialValues, on
                     >
                         {isLoading ? <CircularProgress size={24} color="inherit" /> : (isEdit ? "Update Rule" : "Add Rule")}
                     </Button>
-
                 </Box>
-
-
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 }
 
@@ -602,8 +508,4 @@ const selectStyles = {
     borderRadius: '14px',
     height: 54,
     fontSize: 16,
-}
-
-
-
-
+};

@@ -191,7 +191,7 @@ export default function AlertManagement() {
 
                         {/* Search */}
                         <SearchBar
-                            placeholder="Search Location Name, Devices and so on..."
+                            placeholder="Search rule name"
                             value={search}
                             onChange={setSearch}
                             onSearch={(value) => setSearch(value)}

@@ -38,12 +38,18 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
         );
     }
 
-    // Extract unique sorted timestamps
-    const uniqueTimes = Array.from(new Set(metricRows.map((r: any) => r.time))).sort();
+    // Extract unique sorted timestamps by strict millisecond chronological order
+    const uniqueTimeMs = Array.from(
+        new Set(
+            metricRows
+                .map((r: any) => new Date(r.time).getTime())
+                .filter((t: number) => !isNaN(t))
+        )
+    ).sort((a: number, b: number) => a - b);
 
     // Map timestamps to X-axis labels
-    const xAxisLabels = uniqueTimes.map((t: any) => {
-        const d = new Date(t);
+    const xAxisLabels = uniqueTimeMs.map((ms: number) => {
+        const d = new Date(ms);
         const day = d.getDate();
         const month = d.getMonth() + 1;
         const hours = String(d.getHours()).padStart(2, "0");
@@ -67,16 +73,21 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
         const locName = firstRow?.location_name || "";
         const devName = getDeviceLabel(uid);
 
-        const data = uniqueTimes.map((t: any) => {
-            const match = metricRows.find((r: any) => String(r.device_uid) === String(uid) && r.time === t);
-            return match ? Number(match.value) : null;
+        const data = uniqueTimeMs.map((ms: number) => {
+            const match = metricRows.find(
+                (r: any) =>
+                    String(r.device_uid) === String(uid) &&
+                    new Date(r.time).getTime() === ms
+            );
+            return match && match.value != null ? Number(match.value) : null;
         });
 
         return {
             data,
             label: locName ? `${locName} - ${devName}` : devName,
             color: colors[idx % colors.length],
-            showMark: true,
+            showMark: false,
+            connectNulls: false,
             curve: "catmullRom" as const,
         };
     });
@@ -96,7 +107,10 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
                     {
                         data: xAxisLabels,
                         scaleType: "point",
-                        label: "Days",
+                        tickInterval: (_, index) => {
+                            const step = Math.max(1, Math.ceil(xAxisLabels.length / 10));
+                            return index % step === 0;
+                        },
                         tickLabelStyle: { fontSize: 10, fill: "#9ca3af" },
                     },
                 ]}

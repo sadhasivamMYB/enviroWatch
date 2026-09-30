@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Box,
-    Tab,
-    Tabs,
     Typography,
     Chip,
+    Checkbox,
+    FormControlLabel,
 } from "@mui/material";
 import {
     LocationOnOutlined,
@@ -12,8 +12,24 @@ import {
 } from "@mui/icons-material";
 import { LineChart } from "@mui/x-charts/LineChart";
 
+const colors = ["#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#06b6d4", "#14b8a6", "#6366f1"];
+
 const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }: any) => {
-    const [metric, setMetric] = useState(0); // 0=Temperature, 1=Humidity
+    // Dynamically extract all available metrics from historyData
+    const availableMetrics: string[] = Array.from(
+        new Set((historyData || []).map((r: any) => r.metric_key))
+    ).filter(Boolean) as string[];
+
+    const defaultMetrics = availableMetrics.length > 0 ? availableMetrics : ["Temperature", "Humidity"];
+
+    const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (availableMetrics.length > 0 && selectedMetrics.length === 0) {
+            // Default to selecting only the first available metric initially
+            setSelectedMetrics([availableMetrics[0]]);
+        }
+    }, [historyData]);
 
     if (!locationName) {
         return (
@@ -35,14 +51,16 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
         );
     }
 
-    const metricName = metric === 0 ? "Temperature" : "Humidity";
-    
-    // Filter database rows matching current metric
-    const metricRows = (historyData || []).filter((r: any) => 
-        r.metric_key?.toLowerCase() === metricName.toLowerCase()
+    const activeMetrics = selectedMetrics.length > 0 
+        ? selectedMetrics 
+        : (availableMetrics.length > 0 ? [availableMetrics[0]] : ["Temperature"]);
+
+    // Filter database rows matching selected metrics
+    const metricRows = (historyData || []).filter((r: any) =>
+        activeMetrics.some((m: string) => m.toLowerCase() === r.metric_key?.toLowerCase())
     );
 
-    if (metricRows.length === 0) {
+    if ((historyData || []).length === 0) {
         return (
             <Box sx={{ display: "flex", gap: "16px", flexDirection: "column", mt: "16px" }}>
                 <Box sx={{ display: "flex", p: 2, border: "1px solid rgba(11, 11, 15, 0.06)", borderRadius: "16px", alignItems: "center", gap: 1.5, backgroundColor: "#fff" }}>
@@ -61,19 +79,36 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
                 </Box>
                 <Box sx={{ border: "1px solid rgba(11, 11, 15, 0.06)", borderRadius: "16px", p: 6, textAlign: "center", backgroundColor: "#fff" }}>
                     <Typography variant="body1" sx={{ color: "#6b7280", fontWeight: 500 }}>
-                        No historical {metricName} readings found in the database for the selected date range.
+                        No historical readings found in the database for the selected date range.
                     </Typography>
                 </Box>
             </Box>
         );
     }
 
-    // Extract unique sorted timestamps
-    const uniqueTimes = Array.from(new Set(metricRows.map((r: any) => r.time))).sort();
+    // Toggle metric selection to support selecting multiple metrics simultaneously
+    const handleMetricClick = (metricKey: string) => {
+        if (selectedMetrics.includes(metricKey)) {
+            if (selectedMetrics.length > 1) {
+                setSelectedMetrics(selectedMetrics.filter((m) => m !== metricKey));
+            }
+        } else {
+            setSelectedMetrics([...selectedMetrics, metricKey]);
+        }
+    };
+
+    // Extract unique sorted timestamps by strict millisecond chronological order
+    const uniqueTimeMs = Array.from(
+        new Set(
+            metricRows
+                .map((r: any) => new Date(r.time).getTime())
+                .filter((t: number) => !isNaN(t))
+        )
+    ).sort((a: number, b: number) => a - b);
 
     // Map timestamps to X-axis labels
-    const xAxisLabels = uniqueTimes.map((t: any) => {
-        const d = new Date(t);
+    const xAxisLabels = uniqueTimeMs.map((ms: number) => {
+        const d = new Date(ms);
         const day = d.getDate();
         const month = d.getMonth() + 1;
         const hours = String(d.getHours()).padStart(2, "0");
@@ -82,29 +117,46 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
     });
 
     // Group by unique device uids
-    const deviceUids = Array.from(new Set(metricRows.map((r: any) => r.device_uid)));
+    const deviceUids = Array.from(new Set((historyData || []).map((r: any) => r.device_uid)));
 
     const getDeviceLabel = (uid: string) => {
         const dev = devices?.find((d: any) => String(d.device_uid) === String(uid) || String(d.id) === String(uid));
         return dev?.name || uid;
     };
 
-    // Nice color palette for multiple devices
-    const colors = ["#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#06b6d4"];
+    // Build series data for combination of device + selected metric
+    const seriesData: any[] = [];
+    let colorIdx = 0;
 
-    const seriesData = deviceUids.map((uid: any, idx: number) => {
-        const data = uniqueTimes.map((t: any) => {
-            const match = metricRows.find((r: any) => String(r.device_uid) === String(uid) && r.time === t);
-            return match ? Number(match.value) : null;
+    activeMetrics.forEach((metricKey) => {
+        deviceUids.forEach((uid: any) => {
+            const data = uniqueTimeMs.map((ms: number) => {
+                const match = metricRows.find(
+                    (r: any) =>
+                        String(r.device_uid) === String(uid) &&
+                        r.metric_key?.toLowerCase() === metricKey.toLowerCase() &&
+                        new Date(r.time).getTime() === ms
+                );
+                return match && match.value != null ? Number(match.value) : null;
+            });
+
+            // Only add series if it contains non-null values
+            if (data.some((v) => v !== null)) {
+                const label = activeMetrics.length > 1
+                    ? `${getDeviceLabel(uid)} (${metricKey})`
+                    : getDeviceLabel(uid);
+
+                seriesData.push({
+                    data,
+                    label,
+                    color: colors[colorIdx % colors.length],
+                    showMark: false,
+                    connectNulls: false,
+                    curve: "catmullRom" as const,
+                });
+                colorIdx++;
+            }
         });
-
-        return {
-            data,
-            label: getDeviceLabel(uid),
-            color: colors[idx % colors.length],
-            showMark: true,
-            curve: "catmullRom" as const,
-        };
     });
 
     return (
@@ -155,81 +207,80 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
             </Box>
 
             <Box sx={{ border: "1px solid rgba(11, 11, 15, 0.06)", borderRadius: "16px", padding: 2, backgroundColor: "#fff" }}>
-                {/* Metric tabs */}
-                <Tabs
-                    value={metric}
-                    onChange={(_, v) => setMetric(v)}
-                    sx={{
-                        mb: "16px",
-                        "& .MuiTabs-indicator": {
-                            display: "none",
-                        },
-                    }}
-                >
-                    <Tab
-                        label="Temperature"
-                        sx={{
-                            fontSize: 12,
-                            fontWeight: 500,
-                            borderRadius: "10px",
-                            color: "black",
-                            textTransform: "none",
-                            "&.Mui-selected": {
-                                background: "#e6fbf8",
-                                color: "#00a395",
-                            },
-                        }}
-                    />
+                {/* Metric Checkboxes / Clickable Options */}
+                <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ fontSize: "13px", fontWeight: 600, color: "#374151", mb: 1 }}>
+                        Select Metrics to Display:
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
+                        {defaultMetrics.map((metricKey) => {
+                            const isSelected = activeMetrics.includes(metricKey);
+                            return (
+                                <Chip
+                                    key={metricKey}
+                                    label={metricKey}
+                                    clickable
+                                    onClick={() => handleMetricClick(metricKey)}
+                                    color={isSelected ? "primary" : "default"}
+                                    variant={isSelected ? "filled" : "outlined"}
+                                    sx={{
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        borderRadius: "8px",
+                                        backgroundColor: isSelected ? "#00A395" : "#f3f4f6",
+                                        color: isSelected ? "#fff" : "#374151",
+                                        "&:hover": {
+                                            backgroundColor: isSelected ? "#007A70" : "#e5e7eb",
+                                        },
+                                    }}
+                                />
+                            );
+                        })}
+                    </Box>
+                </Box>
 
-                    <Tab
-                        label="Humidity"
-                        sx={{
-                            fontSize: 12,
-                            fontWeight: 500,
-                            borderRadius: "10px",
-                            color: "black",
-                            textTransform: "none",
-                            "&.Mui-selected": {
-                                background: "#e6fbf8",
-                                color: "#00a395",
-                            },
-                        }}
-                    />
-                </Tabs>
-
-                <Typography sx={{ fontSize: "16px", fontWeight: 500, textTransform: "capitalize" }}>
-                    {metricName} Data
+                <Typography sx={{ fontSize: "16px", fontWeight: 500, mb: 1 }}>
+                    Metrics Trend Analysis ({activeMetrics.join(", ")})
                 </Typography>
 
-                <LineChart
-                    height={400}
-                    style={{
-                        padding: 0,
-                        width: "100%"
-                    }}
-                    series={seriesData}
-                    xAxis={[
-                        {
-                            data: xAxisLabels,
-                            scaleType: "point",
-                            tickLabelStyle: { fontSize: 10, fill: "#9ca3af" },
-                        },
-                    ]}
-                    yAxis={[
-                        {
-                            min: 0,
-                            max: metric === 0 ? 50 : 100,
-                            tickLabelStyle: { fontSize: 10, fill: "#9ca3af" },
-                        },
-                    ]}
-                    sx={{
-                        ".MuiLineElement-root": { strokeWidth: 2 },
-                        ".MuiChartsAxis-line": { stroke: "#e5e7eb" },
-                        ".MuiChartsGrid-line": { stroke: "#f3f4f6" },
-                    }}
-                    grid={{ horizontal: true }}
-                    margin={{ left: 50, right: 20, top: 20, bottom: 40 }}
-                />
+                {seriesData.length > 0 ? (
+                    <LineChart
+                        height={400}
+                        style={{
+                            padding: 0,
+                            width: "100%"
+                        }}
+                        series={seriesData}
+                        xAxis={[
+                            {
+                                data: xAxisLabels,
+                                scaleType: "point",
+                                tickInterval: (_, index) => {
+                                    const step = Math.max(1, Math.ceil(xAxisLabels.length / 10));
+                                    return index % step === 0;
+                                },
+                                tickLabelStyle: { fontSize: 10, fill: "#9ca3af" },
+                            },
+                        ]}
+                        sx={{
+                            ".MuiLineElement-root": { strokeWidth: 2 },
+                            ".MuiChartsAxis-line": { stroke: "#e5e7eb" },
+                            ".MuiChartsGrid-line": { stroke: "#f3f4f6" },
+                        }}
+                        grid={{ horizontal: true }}
+                        margin={{ left: 50, right: 20, top: 20, bottom: 60 }}
+                        slotProps={{
+                            legend: {
+                                direction: "horizontal",
+                                position: { vertical: "bottom", horizontal: "center" },
+                            },
+                        }}
+                    />
+                ) : (
+                    <Typography sx={{ p: 4, textAlign: "center", color: "#6b7280" }}>
+                        No metric data points match your current metric selection.
+                    </Typography>
+                )}
             </Box>
         </Box>
     );

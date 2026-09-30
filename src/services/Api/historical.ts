@@ -22,8 +22,13 @@ export const historicalApi = createApi({
             query: () => "/history"
         }),
         getLocationHistory: builder.query({
-            query: ({ location_id, from_date, to_date }) => 
-                `/history/location/${location_id}?from_date=${from_date}&to_date=${to_date}`
+            query: ({ location_id, from_date, to_date, interval }) => {
+                let url = `/history/location/${location_id}?from_date=${from_date}&to_date=${to_date}`;
+                if (interval && interval !== "raw") {
+                    url += `&interval=${encodeURIComponent(interval)}`;
+                }
+                return url;
+            }
         }),
         getTelemetryCsv: builder.query({
             query: () => "/telemetry/csv"

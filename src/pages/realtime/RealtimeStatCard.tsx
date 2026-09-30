@@ -47,6 +47,12 @@ const cardStyles: Record<
         iconColor: "#22c55e",
         iconUrl: "../src/assets/Icons/leaf.svg"
     },
+    "Inactive": {
+        bg: `linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(107, 114, 128, 0.08)) padding-box, linear-gradient(#fff, #fff) padding-box, linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(107, 114, 128, 0.1)) border-box`,
+        iconBg: "#f3f4f6",
+        iconColor: "#6b7280",
+        iconUrl: "../src/assets/Icons/warning.svg"
+    },
 };
 
 const defaultStyle = {
