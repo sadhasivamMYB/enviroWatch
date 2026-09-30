@@ -6,6 +6,7 @@ export const alertsApi = createApi({
 
     reducerPath: "alertsApi",
     baseQuery: baseQueryWithAuth,
+    refetchOnMountOrArgChange: true,
 
 
     tagTypes: ["alerts"],
@@ -21,8 +22,7 @@ export const alertsApi = createApi({
         // GET - Active Alert Rule
         getActiveAlerts: builder.query<any, void>({
             query: () => "/alerts/active",
-            providesTags: ["alerts"],
-            refetchOnMountOrArgChange: true
+            providesTags: ["alerts"]
         }),
 
         // POST - ADD Alert Rule

@@ -39,8 +39,8 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
     }
 
     // Extract unique sorted timestamps by strict millisecond chronological order
-    const uniqueTimeMs = Array.from(
-        new Set(
+    const uniqueTimeMs: number[] = Array.from(
+        new Set<number>(
             metricRows
                 .map((r: any) => new Date(r.time).getTime())
                 .filter((t: number) => !isNaN(t))
