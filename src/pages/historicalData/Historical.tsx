@@ -1,4 +1,5 @@
 import { Box, Button, FormControl, InputLabel, MenuItem, Select, Tab, Tabs, TextField, Menu, Chip } from "@mui/material";
+import * as XLSX from "xlsx";
 import ParameterWise from "./ParameterWise";
 import { useState, useEffect } from "react";
 import { inputStyles } from "../../theme";
@@ -157,11 +158,132 @@ const Historical = () => {
         setExportAnchorEl(null);
     };
 
-    // Column-wise Pivot Export logic
+    // Parameter Wise export: only the selected parameter, one sheet/section per location
+    const handleParameterWiseExport = (type: "excel" | "pdf") => {
+        const filteredRecords = (parameterHistoryData || []).filter(
+            (r: any) => r.metric_key?.toLowerCase() === parameter.toLowerCase()
+        );
+
+        if (filteredRecords.length === 0) {
+            alert("No data available to export for the selected parameter and date range.");
+            return;
+        }
+
+        const devicesList = Array.isArray(allDevices) ? allDevices : (allDevices?.devices || []);
+        const getDeviceLabel = (uid: string) => {
+            const dev = devicesList.find((d: any) => String(d.device_uid) === String(uid) || String(d.id) === String(uid));
+            return dev?.name || uid;
+        };
+
+        const byLocation: Record<string, any[]> = {};
+        filteredRecords.forEach((rec: any) => {
+            const locName = rec.location_name || "Unknown";
+            if (!byLocation[locName]) byLocation[locName] = [];
+            byLocation[locName].push(rec);
+        });
+
+        const locationNames = Object.keys(byLocation);
+        const sortedRowsFor = (locName: string) =>
+            byLocation[locName].slice().sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+        if (type === "excel") {
+            const workbook = XLSX.utils.book_new();
+            const usedSheetNames = new Set<string>();
+
+            locationNames.forEach((locName) => {
+                const rows = sortedRowsFor(locName).map((rec: any) => ({
+                    Timestamp: rec.time ? rec.time.replace("T", " ") : "",
+                    Device: getDeviceLabel(rec.device_uid),
+                    [parameter]: rec.value != null ? Number(rec.value).toFixed(2) : "-"
+                }));
+
+                let sheetName = locName.replace(/[\\/:?*\[\]]/g, "").slice(0, 31) || "Sheet";
+                let suffix = 2;
+                while (usedSheetNames.has(sheetName)) {
+                    sheetName = `${sheetName.slice(0, 28)} (${suffix})`;
+                    suffix++;
+                }
+                usedSheetNames.add(sheetName);
+
+                const sheet = XLSX.utils.json_to_sheet(rows);
+                XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
+            });
+
+            XLSX.writeFile(workbook, `parameter_wise_${parameter}_${from}_to_${to}.xlsx`);
+            return;
+        }
+
+        const printWindow = window.open("", "_blank");
+        if (printWindow) {
+            const sectionsHtml = locationNames.map((locName, idx) => {
+                const tableRowsHtml = sortedRowsFor(locName).map((rec: any) => `
+                    <tr>
+                        <td>${rec.time ? rec.time.replace("T", " ") : ""}</td>
+                        <td>${getDeviceLabel(rec.device_uid)}</td>
+                        <td>${rec.value != null ? Number(rec.value).toFixed(2) : "-"}</td>
+                    </tr>
+                `).join("");
+
+                return `
+                    <div style="${idx > 0 ? "page-break-before: always;" : ""}">
+                        <div class="header">
+                            <div class="logo">EnviroWatch</div>
+                            <div class="title">Parameter-Wise Comparison - ${parameter}</div>
+                            <div class="meta">
+                                <strong>Location:</strong> ${locName} &nbsp;|&nbsp;
+                                <strong>Date Range:</strong> ${from} to ${to} &nbsp;|&nbsp;
+                                <strong>Exported on:</strong> ${new Date().toLocaleDateString()}
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr><th>Timestamp</th><th>Device</th><th>${parameter}</th></tr>
+                            </thead>
+                            <tbody>${tableRowsHtml}</tbody>
+                        </table>
+                    </div>
+                `;
+            }).join("");
+
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>EnviroWatch Historical Report</title>
+                        <style>
+                            body { font-family: 'Inter', system-ui, sans-serif; color: #111827; padding: 40px; margin: 0; }
+                            .header { border-bottom: 2px solid #007A70; padding-bottom: 20px; margin-bottom: 30px; }
+                            .logo { font-size: 24px; font-weight: 700; color: #007A70; margin-bottom: 10px; }
+                            .title { font-size: 20px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+                            .meta { font-size: 13px; color: #6b7280; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th { background-color: #f3f4f6; color: #374151; font-weight: 600; text-align: left; font-size: 12px; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
+                            td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+                            tr:nth-child(even) td { background-color: #fafafa; }
+                            @media print { body { padding: 20px; } }
+                        </style>
+                    </head>
+                    <body>
+                        ${sectionsHtml}
+                        <script>
+                            window.onload = function() { window.print(); };
+                        </script>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    };
+
+    // Column-wise Pivot Export logic (Location Wise only - single location at a time)
     const handleExport = (type: "excel" | "pdf") => {
         handleExportClose();
 
-        const records = mainTab === 0 ? (locationHistoryData || []) : (parameterHistoryData || []);
+        if (mainTab === 1) {
+            handleParameterWiseExport(type);
+            return;
+        }
+
+        const records = locationHistoryData || [];
         if (!records || records.length === 0) {
             alert("No data available to export for the selected date range.");
             return;
@@ -174,9 +296,7 @@ const Historical = () => {
         const rowMap: Record<string, { time: string; location: string; device: string; values: Record<string, any> }> = {};
 
         records.forEach((rec: any) => {
-            const devList = mainTab === 0 
-                ? (device?.devices || []) 
-                : (Array.isArray(allDevices) ? allDevices : (allDevices?.devices || []));
+            const devList = device?.devices || [];
             const dev = devList.find((d: any) => String(d.device_uid) === String(rec.device_uid) || String(d.id) === String(rec.device_uid));
             const devName = dev?.name || rec.device_uid;
             const timeStr = rec.time ? rec.time.replace("T", " ") : "";
@@ -229,9 +349,7 @@ const Historical = () => {
                     `;
                 }).join("");
 
-                const titleText = mainTab === 0 
-                    ? `Location-Wise Report - ${LocationsData?.find((l: any) => String(l.id) === String(location))?.name || location}` 
-                    : `Parameter-Wise Comparison - ${parameter}`;
+                const titleText = `Location-Wise Report - ${LocationsData?.find((l: any) => String(l.id) === String(location))?.name || location}`;
 
                 printWindow.document.write(`
                     <html>
@@ -418,7 +536,7 @@ const Historical = () => {
                     open={Boolean(exportAnchorEl)}
                     onClose={handleExportClose}
                 >
-                    <MenuItem sx={{ fontSize: "13px" }} onClick={() => handleExport("excel")}>Export as Excel (CSV)</MenuItem>
+                    <MenuItem sx={{ fontSize: "13px" }} onClick={() => handleExport("excel")}>{mainTab === 1 ? "Export as Excel (.xlsx)" : "Export as Excel (CSV)"}</MenuItem>
                     <MenuItem sx={{ fontSize: "13px" }} onClick={() => handleExport("pdf")}>Export as PDF</MenuItem>
                 </Menu>
             </Box>

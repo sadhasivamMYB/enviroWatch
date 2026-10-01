@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     Box,
     Typography,
     Chip,
+    Button,
 } from "@mui/material";
 import {
     LocationOnOutlined,
@@ -20,14 +21,13 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
 
     const defaultMetrics = availableMetrics.length > 0 ? availableMetrics : ["Temperature", "Humidity"];
 
-    const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
-
-    useEffect(() => {
-        if (availableMetrics.length > 0 && selectedMetrics.length === 0) {
-            // Default to selecting only the first available metric initially
-            setSelectedMetrics([availableMetrics[0]]);
-        }
-    }, [historyData]);
+    // "pending" tracks chip clicks as the user makes them; "applied" is what
+    // actually drives the chart, so the graph only redraws once Apply is
+    // clicked rather than on every chip toggle. Both start empty - no metric
+    // is pre-selected, so no chart renders until the user picks one and
+    // clicks Apply.
+    const [pendingMetrics, setPendingMetrics] = useState<string[]>([]);
+    const [appliedMetrics, setAppliedMetrics] = useState<string[]>([]);
 
     if (!locationName) {
         return (
@@ -49,9 +49,7 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
         );
     }
 
-    const activeMetrics = selectedMetrics.length > 0 
-        ? selectedMetrics 
-        : (availableMetrics.length > 0 ? [availableMetrics[0]] : ["Temperature"]);
+    const activeMetrics = appliedMetrics;
 
     // Filter database rows matching selected metrics
     const metricRows = (historyData || []).filter((r: any) =>
@@ -84,16 +82,24 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
         );
     }
 
-    // Toggle metric selection to support selecting multiple metrics simultaneously
+    // Toggle metric selection to support selecting multiple metrics simultaneously.
+    // This only updates the pending (draft) selection - the chart itself doesn't
+    // update until handleApplyMetrics runs.
     const handleMetricClick = (metricKey: string) => {
-        if (selectedMetrics.includes(metricKey)) {
-            if (selectedMetrics.length > 1) {
-                setSelectedMetrics(selectedMetrics.filter((m) => m !== metricKey));
-            }
+        if (pendingMetrics.includes(metricKey)) {
+            setPendingMetrics(pendingMetrics.filter((m) => m !== metricKey));
         } else {
-            setSelectedMetrics([...selectedMetrics, metricKey]);
+            setPendingMetrics([...pendingMetrics, metricKey]);
         }
     };
+
+    const handleApplyMetrics = () => {
+        setAppliedMetrics(pendingMetrics);
+    };
+
+    const hasPendingMetricChanges =
+        pendingMetrics.length !== appliedMetrics.length ||
+        pendingMetrics.some((m) => !appliedMetrics.includes(m));
 
     // Extract unique sorted timestamps by strict millisecond chronological order
     const uniqueTimeMs: number[] = Array.from(
@@ -212,7 +218,7 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
                         {defaultMetrics.map((metricKey) => {
-                            const isSelected = activeMetrics.includes(metricKey);
+                            const isSelected = pendingMetrics.includes(metricKey);
                             return (
                                 <Chip
                                     key={metricKey}
@@ -234,14 +240,38 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
                                 />
                             );
                         })}
+                        <Button
+                            size="small"
+                            variant="contained"
+                            disabled={!hasPendingMetricChanges}
+                            onClick={handleApplyMetrics}
+                            sx={{
+                                textTransform: "capitalize",
+                                background: "#007A70",
+                                borderRadius: "8px",
+                                fontSize: "12px",
+                                height: "26px",
+                                ml: 1,
+                                "&.Mui-disabled": {
+                                    background: "#e5e7eb",
+                                    color: "#9ca3af",
+                                },
+                            }}
+                        >
+                            Apply
+                        </Button>
                     </Box>
                 </Box>
 
                 <Typography sx={{ fontSize: "16px", fontWeight: 500, mb: 1 }}>
-                    Metrics Trend Analysis ({activeMetrics.join(", ")})
+                    Metrics Trend Analysis{activeMetrics.length > 0 ? ` (${activeMetrics.join(", ")})` : ""}
                 </Typography>
 
-                {seriesData.length > 0 ? (
+                {activeMetrics.length === 0 ? (
+                    <Typography sx={{ p: 4, textAlign: "center", color: "#6b7280" }}>
+                        Select one or more metrics above and click Apply to view the chart.
+                    </Typography>
+                ) : seriesData.length > 0 ? (
                     <LineChart
                         height={400}
                         style={{
