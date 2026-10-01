@@ -155,7 +155,12 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
                     label,
                     color: colors[colorIdx % colors.length],
                     showMark: false,
-                    connectNulls: false,
+                    // Each series is plotted against the combined timeline of
+                    // every device/metric shown, but a given device+metric only
+                    // has a value at the instants it actually reported - every
+                    // other series' timestamps are null for it. connectNulls
+                    // draws through those gaps instead of breaking the line.
+                    connectNulls: true,
                     curve: "catmullRom" as const,
                 });
                 colorIdx++;

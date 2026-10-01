@@ -87,7 +87,12 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
             label: locName ? `${locName} - ${devName}` : devName,
             color: colors[idx % colors.length],
             showMark: false,
-            connectNulls: false,
+            // Each series is plotted against the combined timeline of every
+            // selected location, but a given device only has a value at the
+            // instants it actually reported - every other location's
+            // timestamps are null for it. connectNulls draws through those
+            // gaps instead of breaking the line at nearly every point.
+            connectNulls: true,
             curve: "catmullRom" as const,
         };
     });
