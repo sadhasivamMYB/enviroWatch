@@ -25,9 +25,9 @@ const Historical = () => {
     const [location, setLocation] = useState<string>("");
     const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
     
-    // Preset state: default to 1D
+    // Preset state: default to 1D (current calendar day, midnight through now)
     const [preset, setPreset] = useState<PresetOption>("1D");
-    const [from, setFrom] = useState(getLocalDateString(new Date(Date.now() - 86400000)));
+    const [from, setFrom] = useState(getLocalDateString());
     const [to, setTo] = useState(getLocalDateString());
     
     const [parameter, setParameter] = useState("Temperature");
@@ -47,8 +47,8 @@ const Historical = () => {
 
     // Calculate aggregation interval based on preset & custom range
     const getInterval = () => {
-        if (preset === "1D" || preset === "1W") return "raw";
-        if (preset === "1M") return "1 hour";
+        if (preset === "1D") return "raw";
+        if (preset === "1W" || preset === "1M") return "1 hour";
         if (preset === "1Y") return "1 day";
         
         // Custom range aggregation logic:
@@ -91,9 +91,9 @@ const Historical = () => {
         const todayStr = getLocalDateString(now);
 
         if (newPreset === "1D") {
-            const d = new Date(now);
-            d.setDate(d.getDate() - 1);
-            setFrom(getLocalDateString(d));
+            // Current calendar day only - midnight through now, not a rolling
+            // 24h window and not including yesterday.
+            setFrom(todayStr);
             setTo(todayStr);
         } else if (newPreset === "1W") {
             const d = new Date(now);
