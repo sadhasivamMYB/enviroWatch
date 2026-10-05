@@ -1,5 +1,8 @@
 import { Box, Typography } from "@mui/material";
-
+import homeWorkIcon from "../../assets/Icons/home_work.svg";
+import alertIcon from "../../assets/Icons/alert.svg";
+import warningIcon from "../../assets/Icons/warning.svg";
+import leafIcon from "../../assets/Icons/leaf.svg";
 
 // style map
 const cardStyles: Record<
@@ -12,14 +15,14 @@ const cardStyles: Record<
         linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(0, 163, 149, 0.12)) padding-box, linear-gradient(#fff, #fff) padding-box, linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(0, 163, 149, 0.1)) border-box`,
         iconBg: "#E6FBF8",
         iconColor: "#22c55e",
-        iconUrl: "../src/assets/Icons/home_work.svg"
+        iconUrl: homeWorkIcon
     },
     "Active Alerts": {
         bg: `
          linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(209, 0, 0, 0.08)) padding-box, linear-gradient(#fff, #fff) padding-box, linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(209, 0, 0, 0.1)) border-box`,
         iconBg: "#fde6e6",
         iconColor: "#c62828",
-        iconUrl: "../src/assets/Icons/alert.svg"
+        iconUrl: alertIcon
     },
     "Warnings": {
         bg: `
@@ -39,19 +42,19 @@ const cardStyles: Record<
   `,
         iconBg: "#fef9c3",
         iconColor: "#f59e0b",
-        iconUrl: "../src/assets/Icons/warning.svg"
+        iconUrl: warningIcon
     },
     "All Normal": {
         bg: `linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(3, 153, 0, 0.08)) padding-box, linear-gradient(#fff, #fff) padding-box, linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(3, 153, 0, 0.1)) border-box`,
         iconBg: "#E6F6E6",
         iconColor: "#22c55e",
-        iconUrl: "../src/assets/Icons/leaf.svg"
+        iconUrl: leafIcon
     },
     "Inactive": {
         bg: `linear-gradient(115.04deg, rgba(217, 217, 217, 0.01), rgba(107, 114, 128, 0.08)) padding-box, linear-gradient(#fff, #fff) padding-box, linear-gradient(-64.53deg, rgba(11, 11, 15, 0.01), rgba(107, 114, 128, 0.1)) border-box`,
         iconBg: "#f3f4f6",
         iconColor: "#6b7280",
-        iconUrl: "../src/assets/Icons/warning.svg"
+        iconUrl: warningIcon
     },
 };
 
@@ -59,7 +62,7 @@ const defaultStyle = {
     bg: "#eeeeee",
     iconBg: "#dddddd",
     iconColor: "#333",
-    iconUrl: "../../assets/Icon/leaf.svg"
+    iconUrl: leafIcon
 };
 
 const RealtimeStatCard = ({
