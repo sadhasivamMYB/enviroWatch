@@ -186,17 +186,17 @@ const LocationWise = ({ locationName, devices, historyData, isFetchingHistory }:
                     <Thermostat sx={{ color: "#00A395", fontSize: 22 }} />
                 </Box>
                 <Typography sx={{ fontWeight: 500, fontSize: "16px", mr: 2 }}>
-                    Active Devices ({deviceUids.length})
+                    Devices ({deviceUids.length})
                 </Typography>
-                
+
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", flex: 1 }}>
-                    {deviceUids.map((uid: any, i: number) => (
+                    {deviceUids.map((uid: any) => (
                         <Chip
                             key={uid}
                             label={getDeviceLabel(uid)}
                             size="small"
                             sx={{
-                                border: `1px solid ${colors[i % colors.length]}`,
+                                border: "1px solid #d1d5db",
                                 bgcolor: "transparent",
                                 color: "#374151",
                                 fontWeight: 500,

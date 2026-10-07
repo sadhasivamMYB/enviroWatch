@@ -1,13 +1,13 @@
 import { Box, Typography } from "@mui/material";
 import { LineChart } from "@mui/x-charts";
 
-const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, isFetchingHistory }: any) => {
-    
+const ParameterWise = ({ selectedLocations, parameter, parameterLabel, allDevices, historyData, isFetchingHistory }: any) => {
+
     if (!selectedLocations || selectedLocations.length === 0 || !parameter) {
         return (
             <Box sx={{ border: "1px solid rgba(11, 11, 15, 0.06)", borderRadius: "16px", p: 6, mt: "16px", textAlign: "center", backgroundColor: "#fff" }}>
                 <Typography variant="body1" sx={{ color: "#6b7280", fontWeight: 500 }}>
-                    Please select location(s) and a parameter to view comparison trends.
+                    Select location(s) and a parameter above, then click Apply to view comparison trends.
                 </Typography>
             </Box>
         );
@@ -32,7 +32,7 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
         return (
             <Box sx={{ border: "1px solid rgba(11, 11, 15, 0.06)", borderRadius: "16px", p: 6, mt: "16px", textAlign: "center", backgroundColor: "#fff" }}>
                 <Typography variant="body1" sx={{ color: "#6b7280", fontWeight: 500 }}>
-                    No historical {parameter} readings found in the database for the selected location(s) and date range.
+                    No historical {parameterLabel || parameter} readings found in the database for the selected location(s) and date range.
                 </Typography>
             </Box>
         );
@@ -99,7 +99,7 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
 
     return (
         <Box sx={{ border: "1px solid rgba(11, 11, 15, 0.06)", borderRadius: "16px", padding: 2, mt: "16px", backgroundColor: "#fff" }}>
-            <Typography sx={{ fontSize: "16px", fontWeight: 500, mb: 2 }}>{parameter} Comparison</Typography>
+            <Typography sx={{ fontSize: "16px", fontWeight: 500, mb: 2 }}>{parameterLabel || parameter} Comparison</Typography>
             
             <LineChart
                 height={400}
@@ -121,8 +121,6 @@ const ParameterWise = ({ selectedLocations, parameter, allDevices, historyData, 
                 ]}
                 yAxis={[
                     {
-                        min: 0,
-                        max: parameter === "Temperature" ? 50 : 100,
                         tickLabelStyle: { fontSize: 10, fill: "#9ca3af" },
                     },
                 ]}

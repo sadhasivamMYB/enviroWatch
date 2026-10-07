@@ -15,7 +15,8 @@ import {
 } from '@mui/icons-material';
 
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import { useParams } from 'react-router-dom';
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
+import { useNavigate, useParams } from 'react-router-dom';
 import Back from '../../components/Back';
 import { useGetDashboardQuery } from '../../services/Api/dashboard.api';
 import { useEffect, useMemo, useState } from 'react';
@@ -236,6 +237,7 @@ const SmallStatCard = ({ metric }: { metric: any }) => {
 export default function ViewDetail() {
 
     const params = useParams()
+    const navigate = useNavigate()
     const id = params?.id
     const [data, setData] = useState<any>()
     const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
@@ -509,6 +511,23 @@ export default function ViewDetail() {
                 >
                     <Back title="Back to overview" path='/' />
 
+                    <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+                    <Button
+                        variant="outlined"
+                        sx={{
+                            textTransform: "capitalize",
+                            color: "#007A70",
+                            borderColor: "#007A70",
+                            borderRadius: "12px",
+                            fontSize: "12px",
+                            height: "32px",
+                            "&:hover": { borderColor: "#007A70", background: "#e6fbf8" }
+                        }}
+                        startIcon={<HistoryOutlinedIcon sx={{ height: "16px" }} />}
+                        onClick={() => navigate(`/historical?location=${id}`)}
+                    >
+                        History
+                    </Button>
                     <Button
                         variant="contained"
                         sx={{
@@ -524,6 +543,7 @@ export default function ViewDetail() {
                     >
                         Export
                     </Button>
+                    </Box>
                     <Menu
                         anchorEl={exportAnchorEl}
                         open={Boolean(exportAnchorEl)}

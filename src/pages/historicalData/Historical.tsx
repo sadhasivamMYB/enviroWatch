@@ -2,7 +2,9 @@ import { Box, Button, FormControl, InputLabel, MenuItem, Select, Tab, Tabs, Text
 import * as XLSX from "xlsx";
 import ParameterWise from "./ParameterWise";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { inputStyles } from "../../theme";
+import { sensorsList } from "../deviceManagement/DeviceForm";
 import { KeyboardArrowDownOutlined } from "@mui/icons-material";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import LocationWise from "./LocationWise";
@@ -21,71 +23,35 @@ const getLocalDateString = (d = new Date()) => {
 
 type PresetOption = "1D" | "1W" | "1M" | "1Y" | "Custom";
 
-const Historical = () => {
-    const [location, setLocation] = useState<string>("");
-    const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
-    
-    // Preset state: default to 1D (current calendar day, midnight through now)
+// Max allowed range for custom range is 6 months (180 days)
+const MAX_RANGE_DAYS = 180;
+
+// Calculate aggregation interval based on preset & custom range
+const getIntervalFor = (preset: PresetOption, from: string, to: string) => {
+    if (preset === "1D") return "raw";
+    if (preset === "1W" || preset === "1M") return "1 hour";
+    if (preset === "1Y") return "1 day";
+
+    // Custom range aggregation logic:
+    if (!from || !to) return "raw";
+    const d1 = new Date(from);
+    const d2 = new Date(to);
+    const diffDays = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
+    if (diffDays <= 7) return "raw";
+    if (diffDays <= 60) return "1 hour";
+    return "1 day";
+};
+
+// Preset + from/to date state. Location Wise and Parameter Wise each use their
+// own instance so staging dates on one tab never changes the other.
+const useDateRange = () => {
+    // Default to 1D (current calendar day, midnight through now)
     const [preset, setPreset] = useState<PresetOption>("1D");
     const [from, setFrom] = useState(getLocalDateString());
     const [to, setTo] = useState(getLocalDateString());
-    
-    const [parameter, setParameter] = useState("Temperature");
-    const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
-    const [mainTab, setMainTab] = useState(0);
-
-    const { data: locations } = useGetLocationsQuery({});
-    const { data: allDevices } = useGetDevicesQuery();
-    const { data: device } = useGetLocationIdDevicesQuery({ location_id: location }, { skip: !location });
-
-    // Auto-select first location when locations load
-    useEffect(() => {
-        if (locations?.locations?.length && !location) {
-            setLocation(locations.locations[0].id);
-        }
-    }, [locations]);
-
-    // Calculate aggregation interval based on preset & custom range
-    const getInterval = () => {
-        if (preset === "1D") return "raw";
-        if (preset === "1W" || preset === "1M") return "1 hour";
-        if (preset === "1Y") return "1 day";
-        
-        // Custom range aggregation logic:
-        if (!from || !to) return "raw";
-        const d1 = new Date(from);
-        const d2 = new Date(to);
-        const diffDays = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
-        if (diffDays <= 7) return "raw";
-        if (diffDays <= 60) return "1 hour";
-        return "1 day";
-    };
-
-    const currentInterval = getInterval();
-
-    // Trigger API queries with current interval
-    const { data: locationHistoryData, isFetching: isFetchingHistory } = useGetLocationHistoryQuery(
-        { location_id: location, from_date: from, to_date: to, interval: currentInterval },
-        { skip: !location || mainTab !== 0 }
-    );
-
-    const histRes1 = useGetLocationHistoryQuery({ location_id: selectedLocation[0], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 1 || mainTab !== 1 });
-    const histRes2 = useGetLocationHistoryQuery({ location_id: selectedLocation[1], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 2 || mainTab !== 1 });
-    const histRes3 = useGetLocationHistoryQuery({ location_id: selectedLocation[2], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 3 || mainTab !== 1 });
-    const histRes4 = useGetLocationHistoryQuery({ location_id: selectedLocation[3], from_date: from, to_date: to, interval: currentInterval }, { skip: selectedLocation.length < 4 || mainTab !== 1 });
-
-    const parameterHistoryData = [
-        ...(histRes1.data || []),
-        ...(histRes2.data || []),
-        ...(histRes3.data || []),
-        ...(histRes4.data || [])
-    ];
-    const isFetchingParamHistory = histRes1.isFetching || histRes2.isFetching || histRes3.isFetching || histRes4.isFetching;
-
-    const LocationsData = locations?.locations;
 
     // Handle preset clicks (1D, 1W, 1M, 1Y, Custom)
-    const handlePresetSelect = (newPreset: PresetOption) => {
+    const selectPreset = (newPreset: PresetOption) => {
         setPreset(newPreset);
         const now = new Date();
         const todayStr = getLocalDateString(now);
@@ -113,16 +79,13 @@ const Historical = () => {
         }
     };
 
-    // Max allowed range for custom range is 6 months (180 days)
-    const MAX_RANGE_DAYS = 180;
-
-    const handleFromChange = (newFrom: string) => {
+    const changeFrom = (newFrom: string) => {
         setFrom(newFrom);
         if (newFrom && to) {
             const fDate = new Date(newFrom);
             const tDate = new Date(to);
             const diffDays = Math.ceil((tDate.getTime() - fDate.getTime()) / (1000 * 3600 * 24));
-            
+
             if (diffDays < 0) {
                 setTo(newFrom);
             } else if (diffDays > MAX_RANGE_DAYS) {
@@ -133,7 +96,7 @@ const Historical = () => {
         }
     };
 
-    const handleToChange = (newTo: string) => {
+    const changeTo = (newTo: string) => {
         setTo(newTo);
         if (newTo && from) {
             const fDate = new Date(from);
@@ -150,6 +113,113 @@ const Historical = () => {
         }
     };
 
+    return { preset, from, to, selectPreset, changeFrom, changeTo };
+};
+
+// What Parameter Wise is actually showing. Picking locations/parameter/dates
+// only stages a draft; this is set when Apply is clicked.
+type AppliedParameterSelection = {
+    locations: string[];
+    parameter: string;
+    parameterLabel: string;
+    preset: PresetOption;
+    from: string;
+    to: string;
+};
+
+const Historical = () => {
+    const [searchParams] = useSearchParams();
+    const requestedLocationId = searchParams.get("location");
+
+    const [location, setLocation] = useState<string>("");
+
+    // Location Wise date range
+    const {
+        preset,
+        from,
+        to,
+        selectPreset: handlePresetSelect,
+        changeFrom: handleFromChange,
+        changeTo: handleToChange,
+    } = useDateRange();
+
+    // Parameter Wise draft selection (applied on the Apply button)
+    const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
+    const [parameter, setParameter] = useState("");
+    const paramRange = useDateRange();
+    const [appliedSelection, setAppliedSelection] = useState<AppliedParameterSelection | null>(null);
+
+    const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
+    const [mainTab, setMainTab] = useState(0);
+
+    const { data: locations } = useGetLocationsQuery({});
+    const { data: allDevices } = useGetDevicesQuery();
+    const { data: device } = useGetLocationIdDevicesQuery({ location_id: location }, { skip: !location });
+
+    // Auto-select the location from the ?location= link (e.g. View Detail ->
+    // History), otherwise the first location, when locations load
+    useEffect(() => {
+        if (locations?.locations?.length && !location) {
+            const requested = requestedLocationId
+                ? locations.locations.find((l: any) => String(l.id) === requestedLocationId)
+                : null;
+            setLocation((requested || locations.locations[0]).id);
+        }
+    }, [locations]);
+
+    const currentInterval = getIntervalFor(preset, from, to);
+
+    // Trigger API queries with current interval
+    const { data: locationHistoryData, isFetching: isFetchingHistory } = useGetLocationHistoryQuery(
+        { location_id: location, from_date: from, to_date: to, interval: currentInterval },
+        { skip: !location || mainTab !== 0 }
+    );
+
+    // Parameter Wise only fetches what was applied
+    const appliedLocations = appliedSelection?.locations ?? [];
+    const appliedFrom = appliedSelection?.from ?? "";
+    const appliedTo = appliedSelection?.to ?? "";
+    const appliedInterval = appliedSelection
+        ? getIntervalFor(appliedSelection.preset, appliedSelection.from, appliedSelection.to)
+        : "raw";
+
+    const histRes1 = useGetLocationHistoryQuery({ location_id: appliedLocations[0], from_date: appliedFrom, to_date: appliedTo, interval: appliedInterval }, { skip: appliedLocations.length < 1 || mainTab !== 1 });
+    const histRes2 = useGetLocationHistoryQuery({ location_id: appliedLocations[1], from_date: appliedFrom, to_date: appliedTo, interval: appliedInterval }, { skip: appliedLocations.length < 2 || mainTab !== 1 });
+    const histRes3 = useGetLocationHistoryQuery({ location_id: appliedLocations[2], from_date: appliedFrom, to_date: appliedTo, interval: appliedInterval }, { skip: appliedLocations.length < 3 || mainTab !== 1 });
+    const histRes4 = useGetLocationHistoryQuery({ location_id: appliedLocations[3], from_date: appliedFrom, to_date: appliedTo, interval: appliedInterval }, { skip: appliedLocations.length < 4 || mainTab !== 1 });
+
+    const parameterHistoryData = [
+        ...(histRes1.data || []),
+        ...(histRes2.data || []),
+        ...(histRes3.data || []),
+        ...(histRes4.data || [])
+    ];
+    const isFetchingParamHistory = histRes1.isFetching || histRes2.isFetching || histRes3.isFetching || histRes4.isFetching;
+
+    const LocationsData = locations?.locations;
+
+    const canApplyParameter = selectedLocation.length > 0 && !!parameter;
+    const hasPendingParameterChanges =
+        !appliedSelection ||
+        appliedSelection.parameter !== parameter ||
+        appliedSelection.preset !== paramRange.preset ||
+        appliedSelection.from !== paramRange.from ||
+        appliedSelection.to !== paramRange.to ||
+        appliedSelection.locations.length !== selectedLocation.length ||
+        appliedSelection.locations.some((l) => !selectedLocation.includes(l));
+
+    const handleApplyParameter = () => {
+        const sensor = sensorsList.find((s) => s.metric_key === parameter);
+        setAppliedSelection({
+            locations: [...selectedLocation],
+            parameter,
+            parameterLabel: sensor?.display_name || parameter,
+            preset: paramRange.preset,
+            from: paramRange.from,
+            to: paramRange.to,
+        });
+    };
+
     const handleExportClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setExportAnchorEl(event.currentTarget);
     };
@@ -160,8 +230,19 @@ const Historical = () => {
 
     // Parameter Wise export: only the selected parameter, one sheet/section per location
     const handleParameterWiseExport = (type: "excel" | "pdf") => {
+        if (!appliedSelection) {
+            alert("Select location(s) and a parameter, then click Apply before exporting.");
+            return;
+        }
+        const {
+            parameter: appliedParameter,
+            parameterLabel,
+            from: exportFrom,
+            to: exportTo,
+        } = appliedSelection;
+
         const filteredRecords = (parameterHistoryData || []).filter(
-            (r: any) => r.metric_key?.toLowerCase() === parameter.toLowerCase()
+            (r: any) => r.metric_key?.toLowerCase() === appliedParameter.toLowerCase()
         );
 
         if (filteredRecords.length === 0) {
@@ -194,7 +275,7 @@ const Historical = () => {
                 const rows = sortedRowsFor(locName).map((rec: any) => ({
                     Timestamp: rec.time ? rec.time.replace("T", " ") : "",
                     Device: getDeviceLabel(rec.device_uid),
-                    [parameter]: rec.value != null ? Number(rec.value).toFixed(2) : "-"
+                    [parameterLabel]: rec.value != null ? Number(rec.value).toFixed(2) : "-"
                 }));
 
                 let sheetName = locName.replace(/[\\/:?*\[\]]/g, "").slice(0, 31) || "Sheet";
@@ -209,7 +290,7 @@ const Historical = () => {
                 XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
             });
 
-            XLSX.writeFile(workbook, `parameter_wise_${parameter}_${from}_to_${to}.xlsx`);
+            XLSX.writeFile(workbook, `parameter_wise_${parameterLabel}_${exportFrom}_to_${exportTo}.xlsx`);
             return;
         }
 
@@ -228,16 +309,16 @@ const Historical = () => {
                     <div style="${idx > 0 ? "page-break-before: always;" : ""}">
                         <div class="header">
                             <div class="logo">EnviroWatch</div>
-                            <div class="title">Parameter-Wise Comparison - ${parameter}</div>
+                            <div class="title">Parameter-Wise Comparison - ${parameterLabel}</div>
                             <div class="meta">
                                 <strong>Location:</strong> ${locName} &nbsp;|&nbsp;
-                                <strong>Date Range:</strong> ${from} to ${to} &nbsp;|&nbsp;
+                                <strong>Date Range:</strong> ${exportFrom} to ${exportTo} &nbsp;|&nbsp;
                                 <strong>Exported on:</strong> ${new Date().toLocaleDateString()}
                             </div>
                         </div>
                         <table>
                             <thead>
-                                <tr><th>Timestamp</th><th>Device</th><th>${parameter}</th></tr>
+                                <tr><th>Timestamp</th><th>Device</th><th>${parameterLabel}</th></tr>
                             </thead>
                             <tbody>${tableRowsHtml}</tbody>
                         </table>
@@ -396,6 +477,11 @@ const Historical = () => {
     };
 
     const renderFilterBar = (mode: "location" | "parameter") => {
+        // Each tab edits its own date range
+        const range = mode === "location"
+            ? { preset, from, to, selectPreset: handlePresetSelect, changeFrom: handleFromChange, changeTo: handleToChange }
+            : paramRange;
+
         return (
             <Box sx={{ display: "flex", gap: 2, justifyContent: "space-between", flexWrap: "wrap", alignItems: "center" }}>
                 <Box sx={{ display: "flex", gap: 1.2, flexWrap: "wrap", alignItems: "center" }}>
@@ -445,11 +531,11 @@ const Historical = () => {
                             <FormControl sx={{ ...inputStyles, minWidth: 180 }}>
                                 <InputLabel>Parameter</InputLabel>
                                 <Select sx={inputStyles} value={parameter} label="Parameter" onChange={(e: any) => setParameter(e.target.value)}>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="Temperature">Temperature</MenuItem>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="Humidity">Humidity</MenuItem>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="CO2">CO2</MenuItem>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="Light">Light</MenuItem>
-                                    <MenuItem sx={{ fontSize: "13px" }} value="Oxygen">Oxygen</MenuItem>
+                                    {sensorsList.map((sensor) => (
+                                        <MenuItem sx={{ fontSize: "13px" }} key={sensor.metric_key} value={sensor.metric_key}>
+                                            {sensor.display_name}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </>
@@ -458,13 +544,13 @@ const Historical = () => {
                     {/* Preset Buttons (1D, 1W, 1M, 1Y, Custom) */}
                     <Box sx={{ display: "flex", gap: 0.5, border: "1px solid #e5e7eb", borderRadius: "10px", p: "3px", bgcolor: "#f9fafb" }}>
                         {(["1D", "1W", "1M", "1Y", "Custom"] as PresetOption[]).map((p) => {
-                            const isSelected = preset === p;
+                            const isSelected = range.preset === p;
                             return (
                                 <Chip
                                     key={p}
                                     label={p}
                                     clickable
-                                    onClick={() => handlePresetSelect(p)}
+                                    onClick={() => range.selectPreset(p)}
                                     sx={{
                                         fontSize: "12px",
                                         fontWeight: 600,
@@ -485,35 +571,56 @@ const Historical = () => {
                     <TextField
                         type="date"
                         label="From"
-                        value={from}
-                        disabled={preset !== "Custom"}
-                        onChange={(e) => handleFromChange(e.target.value)}
+                        value={range.from}
+                        disabled={range.preset !== "Custom"}
+                        onChange={(e) => range.changeFrom(e.target.value)}
                         sx={{
                             ...inputStyles,
                             minWidth: 150,
-                            opacity: preset !== "Custom" ? 0.75 : 1,
+                            opacity: range.preset !== "Custom" ? 0.75 : 1,
                         }}
                         slotProps={{
                             inputLabel: { shrink: true },
-                            htmlInput: { max: to }
+                            htmlInput: { max: range.to }
                         }}
                     />
                     <TextField
                         type="date"
                         label="To"
-                        value={to}
-                        disabled={preset !== "Custom"}
-                        onChange={(e) => handleToChange(e.target.value)}
+                        value={range.to}
+                        disabled={range.preset !== "Custom"}
+                        onChange={(e) => range.changeTo(e.target.value)}
                         sx={{
                             ...inputStyles,
                             minWidth: 150,
-                            opacity: preset !== "Custom" ? 0.75 : 1,
+                            opacity: range.preset !== "Custom" ? 0.75 : 1,
                         }}
                         slotProps={{
                             inputLabel: { shrink: true },
-                            htmlInput: { min: from }
+                            htmlInput: { min: range.from }
                         }}
                     />
+
+                    {mode === "parameter" && (
+                        <Button
+                            variant="contained"
+                            disabled={!canApplyParameter || !hasPendingParameterChanges}
+                            onClick={handleApplyParameter}
+                            sx={{
+                                textTransform: "capitalize",
+                                background: "#007A70",
+                                borderRadius: "12px",
+                                fontSize: "12px",
+                                height: "32px",
+                                "&.Mui-disabled": {
+                                    background: "#e5e7eb",
+                                    color: "#9ca3af",
+                                },
+                            }}
+                        >
+                            Apply
+                        </Button>
+                    )}
                 </Box>
 
                 <Button
@@ -623,13 +730,14 @@ const Historical = () => {
                             isFetchingHistory={isFetchingHistory}
                         />
                     ) : (
-                        <ParameterWise 
-                            selectedLocations={selectedLocation}
-                            parameter={parameter}
+                        <ParameterWise
+                            selectedLocations={appliedSelection?.locations ?? []}
+                            parameter={appliedSelection?.parameter ?? ""}
+                            parameterLabel={appliedSelection?.parameterLabel ?? ""}
                             locationsData={LocationsData}
                             allDevices={allDevices}
-                            from={from}
-                            to={to}
+                            from={appliedFrom}
+                            to={appliedTo}
                             historyData={parameterHistoryData}
                             isFetchingHistory={isFetchingParamHistory}
                         />
