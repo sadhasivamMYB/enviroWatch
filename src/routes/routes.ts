@@ -7,6 +7,7 @@ import LocationManagement from "../pages/locationManagement/LocationManagement";
 import DeviceManagement from "../pages/deviceManagement/DeviceManagement";
 import UsersAndRoles from "../pages/usersAndRoles/UsersAndRoles";
 import Historical from "../pages/historicalData/Historical";
+import FacilityMap from "../pages/facilityMap/FacilityMap";
 
 
 type IrouteConfig = {
@@ -20,6 +21,12 @@ const routesConfig: IrouteConfig[] = [
   {
     path: "/realtime",
     element: Realtime,
+    roles: [Role.ADMIN, Role.MANAGER, Role.VIEWER],
+  },
+
+  {
+    path: "facility-map",
+    element: FacilityMap,
     roles: [Role.ADMIN, Role.MANAGER, Role.VIEWER],
   },
 

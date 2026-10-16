@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "../../components/Pagetitle";
 import { KeyboardArrowDownOutlined } from "@mui/icons-material";
 import { useGetDashboardQuery } from "../../services/Api/dashboard.api";
+import { POLL_MS } from "../../hooks/useFacilityData";
 import { DESCRIPTION_OPTIONS } from "../locationManagement/LocationForm";
 
 const FILTERS = ["all", "normal", "alert", "inactive"];
@@ -47,7 +48,7 @@ const Realtime = () => {
     const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
     const navigate = useNavigate();
 
-    const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardQuery();
+    const { data: dashboardData, isLoading: dashboardLoading } = useGetDashboardQuery(undefined, { pollingInterval: POLL_MS });
 
     const next_Pg = (e: any) => {
         navigate(`/view-detail/${e}`);
@@ -208,7 +209,7 @@ const Realtime = () => {
             <PageTitle title="Realtime Monitoring" />
 
             {/* Stats */}
-            <Box sx={{ display: "flex", gap: 2, my: 3, flexWrap: "wrap" }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" }, gap: 2, my: 3 }}>
                 <RealtimeStatCard count={dashboardData?.summary?.total_locations || 0} label="Total Location" />
                 <RealtimeStatCard count={dashboardData?.summary?.active_alerts || 0} label="Active Alerts" />
                 <RealtimeStatCard count={locationData.filter((c: any) => (c.status || []).includes("normal")).length} label="All Normal" />

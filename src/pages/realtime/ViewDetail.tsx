@@ -526,7 +526,7 @@ export default function ViewDetail() {
                         startIcon={<HistoryOutlinedIcon sx={{ height: "16px" }} />}
                         onClick={() => navigate(`/historical?location=${id}`)}
                     >
-                        History
+                        View Trend
                     </Button>
                     <Button
                         variant="contained"

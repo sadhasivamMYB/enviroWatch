@@ -5,6 +5,11 @@
   font-family: "Onest";
 }
 
+/* The app shell is exactly 100vh; the default 8px body margin made the whole page scroll. */
+body {
+  margin: 0;
+}
+
 ::-webkit-scrollbar {
   display: none;
 }

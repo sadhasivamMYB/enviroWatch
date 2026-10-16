@@ -9,6 +9,12 @@ export const navItems = [
     roles: [Role.ADMIN, Role.MANAGER, Role.VIEWER],
   },
   {
+    label: "Facility Map",
+    path: "/facility-map",
+    icon: "map",
+    roles: [Role.ADMIN, Role.MANAGER, Role.VIEWER],
+  },
+  {
     label: "Alerts & Thresholds",
     path: "/alerts-thresholds",
     icon: "alerts",
