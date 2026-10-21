@@ -302,7 +302,6 @@ const FacilityMap = () => {
                     }}
                   >
                     {z.name}
-                    {z.alarmCount ? ` · ${z.alarmCount}!` : ""}
                   </Box>
                 </Box>
               );

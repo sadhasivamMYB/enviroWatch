@@ -15,7 +15,7 @@ export const FACILITY_IMAGE = {
 };
 
 export const FACILITY_ZONES: FacilityZone[] = [
-  { id: "etp", name: "ETP & Gate", x: 25.6, y: 15, locations: ["ETP Inlet", "ETP2"] },
+  { id: "etp", name: "ETP", x: 31.8, y: 21.3, locations: ["ETP Inlet", "ETP2"] },
   { id: "cold-room", name: "Cold Room", x: 42.9, y: 27.2, locations: ["Cold Room"] },
   { id: "bottling", name: "Bottling", x: 47.5, y: 21, locations: ["Bottling", "Bottling 2"] },
   { id: "sachet", name: "Sachet", x: 58.2, y: 15.5, locations: ["Sachet", "Sachet 2"] },

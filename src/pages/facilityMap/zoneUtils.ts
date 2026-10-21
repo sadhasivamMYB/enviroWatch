@@ -14,7 +14,8 @@ export const buildZones = (locations: any[]): ZoneData[] => {
       const metrics: ZoneMetric[] = (loc.devices ?? []).flatMap((d: any) =>
         (d.metrics ?? []).map((m: any) => ({
           key: m.metric_key,
-          name: m.metric_name,
+          // Same label order as the Realtime page's FacilityCard.
+          name: m.display_name || m.metric_name || m.metric_key,
           value: m.latest_value ?? "--",
           unit: m.unit ?? "",
           status: toStatusKey(m.status),
