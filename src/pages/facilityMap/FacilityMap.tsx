@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Box, Chip, GlobalStyles, IconButton, Typography } from "@mui/material";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
@@ -21,6 +21,7 @@ const FacilityMap = () => {
   const [selectedId, setSelectedId] = useState<string>(params.get("zone") ?? "");
   const [picked, setPicked] = useState("");
   const [cursorHidden, setCursorHidden] = useState(true);
+  const cardScrollRef = useRef<HTMLDivElement>(null);
 
   const zones = useMemo(() => buildZones(locations), [locations]);
   const alarmZones = zones.filter((z) => z.status === "alert");
@@ -51,6 +52,28 @@ const FacilityMap = () => {
     }, ROTATE_MS);
     return () => window.clearTimeout(t);
   }, [tv, zones.length, selectedKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Card taller than the column: scroll it inside the column. In TV mode nobody can scroll,
+  // so glide from top to bottom while the zone is highlighted.
+  useEffect(() => {
+    const el = cardScrollRef.current;
+    if (!el) return;
+    el.scrollTop = 0;
+    const overflow = el.scrollHeight - el.clientHeight;
+    if (!tv || overflow <= 0) return;
+    const start = performance.now();
+    const duration = ROTATE_MS * 0.7;
+    let raf = 0;
+    const step = (t: number) => {
+      el.scrollTop = Math.min(1, (t - start) / duration) * overflow;
+      if (t - start < duration) raf = requestAnimationFrame(step);
+    };
+    const delay = window.setTimeout(() => (raf = requestAnimationFrame(step)), ROTATE_MS * 0.15);
+    return () => {
+      window.clearTimeout(delay);
+      cancelAnimationFrame(raf);
+    };
+  }, [tv, selectedKey, filter]);
 
   // Keep the URL mode in sync when the user leaves browser fullscreen with Esc.
   useEffect(() => {
@@ -314,7 +337,17 @@ const FacilityMap = () => {
           </Box>
         </Box>
 
-        <Box sx={{ width: { xs: "100%", md: tv ? 460 : 380 }, flexShrink: 0, alignSelf: { md: "center" } }}>
+        <Box
+          sx={{
+            width: { xs: "100%", md: tv ? 460 : 380 },
+            flexShrink: 0,
+            alignSelf: { md: "stretch" },
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: { md: "center" },
+          }}
+        >
           {tv && selected && (
             <Box sx={{ height: 4, borderRadius: 2, bgcolor: "#e5e7eb", mb: 1, overflow: "hidden" }}>
               <Box
@@ -323,7 +356,9 @@ const FacilityMap = () => {
               />
             </Box>
           )}
-          {selected && <ZoneCard zone={selected} filter={filter} large={tv} />}
+          <Box ref={cardScrollRef} sx={{ minHeight: 0, overflowY: "auto", borderRadius: 3, scrollbarWidth: "thin" }}>
+            {selected && <ZoneCard zone={selected} filter={filter} large={tv} />}
+          </Box>
         </Box>
       </Box>
     </Box>
