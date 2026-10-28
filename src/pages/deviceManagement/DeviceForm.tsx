@@ -78,7 +78,7 @@ export const sensorsList = [
     {
         metric_key: "no2",
         display_name: "NO2",
-        unit: "ppb"
+        unit: "ppm"
     },
     {
         metric_key: "o3",
@@ -128,7 +128,12 @@ export const sensorsList = [
     {
         metric_key: "so2",
         display_name: "SO2",
-        unit: "ppb"
+        unit: "ppm"
+    },
+    {
+        metric_key: "aqi",
+        display_name: "AQI",
+        unit: ""
     },
 ];
 
