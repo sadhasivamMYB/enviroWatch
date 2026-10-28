@@ -12,6 +12,20 @@ import ZoneCard from "./ZoneCard";
 const ROTATE_MS = 5000;
 const ACCENT = "#003632";
 
+// Position a label on one side of its pin, `gap` px away from the pin.
+const labelPlacement = (pos: "top" | "bottom" | "left" | "right", gap: number) => {
+  switch (pos) {
+    case "top":
+      return { bottom: "100%", left: "50%", transform: "translateX(-50%)", mb: `${gap}px` };
+    case "left":
+      return { right: "100%", top: "50%", transform: "translateY(-50%)", mr: `${gap}px` };
+    case "right":
+      return { left: "100%", top: "50%", transform: "translateY(-50%)", ml: `${gap}px` };
+    default:
+      return { top: "100%", left: "50%", transform: "translateX(-50%)", mt: `${gap}px` };
+  }
+};
+
 const FacilityMap = () => {
   const [params, setParams] = useSearchParams();
   const { locations, updatedAt, now, isStale, counts } = useFacilityData();
@@ -309,19 +323,18 @@ const FacilityMap = () => {
                   <Box
                     sx={{
                       position: "absolute",
-                      top: "100%",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      mt: active ? 1.4 : 0.5,
-                      px: 0.9,
-                      py: 0.2,
+                      ...labelPlacement(z.labelPos, active ? 15 : 10),
+                      px: "0.6em",
+                      py: "0.15em",
                       whiteSpace: "nowrap",
-                      fontSize: active ? 13 : 11,
+                      // sized with the map so names stay large on a TV and never wrap
+                      fontSize: `clamp(8px, ${active ? 1.9 : 1.7}cqw, 28px)`,
                       fontWeight: 600,
+                      lineHeight: 1.25,
                       borderRadius: 1,
                       color: active ? "#fff" : "#111827",
-                      bgcolor: active ? ACCENT : "rgba(255,255,255,0.92)",
-                      border: `1px solid ${active ? ACCENT : "#e5e7eb"}`,
+                      bgcolor: active ? ACCENT : "rgba(255,255,255,0.95)",
+                      border: `1px solid ${active ? ACCENT : "#d1d5db"}`,
                     }}
                   >
                     {z.name}
