@@ -20,6 +20,8 @@ import { KeyboardArrowDownOutlined } from "@mui/icons-material";
 import { useGetDashboardQuery } from "../../services/Api/dashboard.api";
 import { POLL_MS } from "../../hooks/useFacilityData";
 import { DESCRIPTION_OPTIONS } from "../locationManagement/LocationForm";
+import HighlightLocationCard from "../../components/HighlightLocationCard";
+import { findHighlightLocation } from "../../config/highlightLocation";
 
 const FILTERS = ["all", "normal", "alert", "inactive"];
 
@@ -88,6 +90,11 @@ const Realtime = () => {
 
         return matchesStatus && matchesDescription;
     });
+
+    // The highlighted location (Boiler & WTP) is always the big first card, whatever the filters say,
+    // so it is taken out of the ordinary grid to avoid showing it twice.
+    const highlight = findHighlightLocation(locationData);
+    const gridCards = filteredCards.filter((card: any) => card !== highlight);
 
     const handleExportClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setExportAnchorEl(event.currentTarget);
@@ -317,9 +324,14 @@ const Realtime = () => {
                 <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
                     <CircularProgress size={32} sx={{ color: "#0d9488" }} />
                 </Box>
-            ) : filteredCards?.length > 0 ? (
+            ) : gridCards.length > 0 || highlight ? (
                 <Grid container spacing={2.5} sx={{ mt: 2 }}>
-                    {filteredCards?.map((card: any, i: number) => (
+                    {highlight && (
+                        <Grid size={{ xs: 12 }}>
+                            <HighlightLocationCard location={highlight} onViewDetails={next_Pg} />
+                        </Grid>
+                    )}
+                    {gridCards.map((card: any, i: number) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
                             <FacilityCard data={card} status={locationData?.active_alerts} onViewDetails={next_Pg} />
                         </Grid>

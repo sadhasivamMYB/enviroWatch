@@ -8,6 +8,8 @@ import { STATUS_COLORS } from "../../config/status";
 import { useFacilityData } from "../../hooks/useFacilityData";
 import { buildZones } from "./zoneUtils";
 import ZoneCard from "./ZoneCard";
+import HighlightLocationCard from "../../components/HighlightLocationCard";
+import { findHighlightLocation } from "../../config/highlightLocation";
 
 const ROTATE_MS = 5000;
 const ACCENT = "#003632";
@@ -243,12 +245,17 @@ const FacilityMap = () => {
           overflowY: { xs: "auto", md: "visible" },
         }}
       >
+        <Box sx={{ flex: { xs: "none", md: 1 }, minWidth: 0, minHeight: 0, alignSelf: "stretch", display: "flex", flexDirection: "column", gap: 1.5 }}>
+          {/* Boiler & WTP air quality stays above the map while the zone card on the right rotates */}
+          <Box sx={{ flexShrink: 0 }}>
+            <HighlightLocationCard location={findHighlightLocation(locations)} variant="banner" />
+          </Box>
         <Box
           sx={{
             flex: { xs: "none", md: 1 },
             height: { xs: `calc(((100vw / ${tv ? 1 : CONTENT_ZOOM}) - 32px) * ${FACILITY_IMAGE.height / FACILITY_IMAGE.width})`, md: "auto" },
             minWidth: 0,
-            alignSelf: "stretch",
+            minHeight: 0,
             containerType: "size",
             display: "flex",
             alignItems: "center",
@@ -348,6 +355,7 @@ const FacilityMap = () => {
               </Box>
             )}
           </Box>
+        </Box>
         </Box>
 
         <Box
