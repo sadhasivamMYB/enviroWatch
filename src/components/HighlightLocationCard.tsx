@@ -62,9 +62,8 @@ const HighlightLocationCard = ({ location, variant = "full", onViewDetails }: Pr
     >
       {banner ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8, minWidth: 130 }}>
-            {title}
-            {chip}
+          <Box sx={{ minWidth: 130 }}>
+            <Typography sx={{ fontSize: 20, fontWeight: 600, lineHeight: 1.15, color: "#111827" }}>{name}</Typography>
           </Box>
           <Box sx={{ flex: 1, minWidth: 260 }}>
             {location ? (
