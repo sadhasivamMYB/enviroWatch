@@ -28,10 +28,12 @@ const labelPlacement = (pos: "top" | "bottom" | "left" | "right", gap: number) =
   }
 };
 
-const FacilityMap = () => {
+// publicMode: the open /facility-map/live page. Always in display mode, reads the public endpoint,
+// and never leaves display mode (no Esc/exit handling, no login).
+const FacilityMap = ({ publicMode = false }: { publicMode?: boolean }) => {
   const [params, setParams] = useSearchParams();
-  const { locations, updatedAt, now, isStale, counts } = useFacilityData();
-  const tv = params.get("mode") === "fullscreen";
+  const { locations, updatedAt, now, isStale, counts } = useFacilityData(publicMode);
+  const tv = publicMode || params.get("mode") === "fullscreen";
   const edit = params.get("edit") === "1";
   const filter = params.get("metric") ?? "all";
   const [selectedId, setSelectedId] = useState<string>(params.get("zone") ?? "");
@@ -93,19 +95,20 @@ const FacilityMap = () => {
 
   // Keep the URL mode in sync when the user leaves browser fullscreen with Esc.
   useEffect(() => {
+    if (publicMode) return;
     const onChange = () => {
       if (!document.fullscreenElement && tv) update({ mode: null });
     };
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
-  }, [tv, update]);
+  }, [tv, update, publicMode]);
 
   useEffect(() => {
-    if (!tv) return;
+    if (!tv || publicMode) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && update({ mode: null });
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [tv, update]);
+  }, [tv, update, publicMode]);
 
   // TV mode: hide the mouse pointer, show it while the mouse is moving, hide again after 2s idle.
   useEffect(() => {
@@ -131,6 +134,12 @@ const FacilityMap = () => {
     (navigator as any).wakeLock.request("screen").then((l: any) => (lock = l)).catch(() => {});
     return () => lock?.release?.().catch(() => {});
   }, [tv]);
+
+  // Public page: browser full screen on request (a page cannot enter it on its own at load).
+  const toggleBrowserFullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  };
 
   const toggleTv = () => {
     if (tv) {
@@ -208,6 +217,15 @@ const FacilityMap = () => {
         <Typography sx={{ fontSize: tv ? 22 : 14, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
           {new Date(now).toLocaleTimeString()}
         </Typography>
+        {publicMode && (
+          <IconButton
+            onClick={toggleBrowserFullscreen}
+            aria-label="Full screen"
+            sx={{ color: ACCENT, visibility: cursorHidden ? "hidden" : "visible" }}
+          >
+            <FullscreenIcon />
+          </IconButton>
+        )}
         {!tv && (
           <IconButton onClick={toggleTv} sx={{ color: ACCENT }} aria-label="Full screen">
             <FullscreenIcon />
